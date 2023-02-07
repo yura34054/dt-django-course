@@ -25,7 +25,7 @@ SECRET_KEY = "django-insecure-06&&*q-i#ym#au_ie$lqxwj^g)l7xy9mj=##5lbp5$+4g632gp
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ["localhost", "127.0.0.1"]
+ALLOWED_HOSTS = ["localhost", "127.0.0.1", "*"]
 
 
 # Application definition
@@ -123,3 +123,16 @@ STATIC_URL = "static/"
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 AUTH_USER_MODEL = "app.AdminUser"
+
+
+# Bot settings
+
+TELEGRAM_BOT = {
+    "bot_token": "",
+    "WEBHOOK_INFO": {
+        "secret_token": "",
+        "url": "",
+    },
+}
+
+TELEGRAM_BOT.update({"telegram_url": f'https://api.telegram.org/bot{TELEGRAM_BOT["bot_token"]}/'})
