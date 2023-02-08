@@ -12,18 +12,36 @@ https://docs.djangoproject.com/en/4.0/ref/settings/
 
 from pathlib import Path
 
+import environ
+import os
+
+
+env = environ.Env(
+    SECRET_KEY=(str, ""),
+    DEBUG=(bool, True),
+    TELEGRAM_TOKEN=(str, ""),
+    WEBHOOK_MODE=(bool, True),
+    TELEGRAM_SECRET_TOKEN=(str, ""),
+    URL=(str, ""),
+    DROP_PENDING_UPDATES=(bool, False),
+)
+
+
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
+
+
+environ.Env.read_env(os.path.join(BASE_DIR.parent, '.env'))
 
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/4.0/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = "django-insecure-06&&*q-i#ym#au_ie$lqxwj^g)l7xy9mj=##5lbp5$+4g632gp"
+SECRET_KEY = env("SECRET_KEY")
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = env("DEBUG")
 
 ALLOWED_HOSTS = ["localhost", "127.0.0.1", "*"]
 
@@ -128,11 +146,13 @@ AUTH_USER_MODEL = "app.AdminUser"
 # Bot settings
 
 TELEGRAM_BOT = {
-    "bot_token": "",
+    "bot_token": env('TELEGRAM_TOKEN'),
+    'webhook_mode': env('WEBHOOK_MODE'),
     "WEBHOOK_INFO": {
-        "secret_token": "",
-        "url": "",
+        "secret_token": env('TELEGRAM_SECRET_TOKEN'),
+        "url": f'{env("URL")}/api/telegram_webhook/',
+        "drop_pending_updates": env('DROP_PENDING_UPDATES')
     },
 }
 
-TELEGRAM_BOT.update({"telegram_url": f'https://api.telegram.org/bot{TELEGRAM_BOT["bot_token"]}/'})
+TELEGRAM_BOT.update({"telegram_url": f'https://api.telegram.org/bot{env("TELEGRAM_TOKEN")}/'})

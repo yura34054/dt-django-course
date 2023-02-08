@@ -1,27 +1,27 @@
 migrate:
-	python3 src/manage.py migrate $(if $m, api $m,)
+	python src/manage.py migrate $(if $m, api $m,)
 
 makemigrations:
-	python3 src/manage.py makemigrations
+	python src/manage.py makemigrations
 	sudo chown -R ${USER} src/app/migrations/
 
 createsuperuser:
-	python3 src/manage.py createsuperuser
+	python src/manage.py createsuperuser
 
 collectstatic:
-	python3 src/manage.py collectstatic --no-input
+	python src/manage.py collectstatic --no-input
 
 dev:
-	python3 src/manage.py runserver localhost:8000
+	python src/manage.py runserver localhost:8000
 
 command:
-	python3 src/manage.py ${c}
+	python src/manage.py ${c}
 
 shell:
-	python3 src/manage.py shell
+	python src/manage.py shell
 
 debug:
-	python3 src/manage.py debug
+	python src/manage.py debug
 
 piplock:
 	pipenv install
