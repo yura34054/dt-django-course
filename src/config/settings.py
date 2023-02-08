@@ -10,11 +10,10 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/4.0/ref/settings/
 """
 
+import os
 from pathlib import Path
 
 import environ
-import os
-
 
 env = environ.Env(
     SECRET_KEY=(str, ""),
@@ -31,7 +30,7 @@ env = environ.Env(
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 
-environ.Env.read_env(os.path.join(BASE_DIR.parent, '.env'))
+environ.Env.read_env(os.path.join(BASE_DIR.parent, ".env"))
 
 
 # Quick-start development settings - unsuitable for production
@@ -146,12 +145,12 @@ AUTH_USER_MODEL = "app.AdminUser"
 # Bot settings
 
 TELEGRAM_BOT = {
-    "bot_token": env('TELEGRAM_TOKEN'),
-    'webhook_mode': env('WEBHOOK_MODE'),
+    "bot_token": env("TELEGRAM_TOKEN"),
+    "webhook_mode": env("WEBHOOK_MODE"),
     "WEBHOOK_INFO": {
-        "secret_token": env('TELEGRAM_SECRET_TOKEN'),
+        "secret_token": env("TELEGRAM_SECRET_TOKEN"),
         "url": f'{env("URL")}/api/telegram_webhook/',
-        "drop_pending_updates": env('DROP_PENDING_UPDATES')
+        "drop_pending_updates": env("DROP_PENDING_UPDATES"),
     },
 }
 

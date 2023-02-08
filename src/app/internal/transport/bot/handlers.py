@@ -12,7 +12,9 @@ def telegram_webhook(request: HttpRequest):
     if request.method != "POST":
         return HttpResponseBadRequest()
 
-    if request.META.get("HTTP_X_TELEGRAM_BOT_API_SECRET_TOKEN", '') != TELEGRAM_BOT["WEBHOOK_INFO"].get("secret_token", ''):
+    if request.META.get("HTTP_X_TELEGRAM_BOT_API_SECRET_TOKEN", "") != TELEGRAM_BOT["WEBHOOK_INFO"].get(
+        "secret_token", ""
+    ):
         return HttpResponseBadRequest()
 
     update = request.body.decode("utf8")
