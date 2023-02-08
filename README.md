@@ -46,7 +46,7 @@ make dev
 
 ## Possible problems
 * This bot works in webhook mode. If you want, you can run a parallel process getting updates and sending them to localhost.
-* Code assumes that telegram block all messaging before the first /start, this can lead to problems if you are removing data from database.
+* Code assumes that telegram blocks all messaging before the first /start command, this can lead to problems if you are removing data from database.
 
 ## Known issues
 * webhook initialization can run more than once producing "Too Many Requests" error message
