@@ -32,7 +32,7 @@ def update_user_phone(user: QuerySet, phone_number) -> None:
 def get_user_info(user: User) -> dict:
     """return info about user if he has his phone set, else empty dict"""
     if user.phone_number is None:
-        return None
+        return {}
 
     user_info = {
         "first_name": user.first_name,
