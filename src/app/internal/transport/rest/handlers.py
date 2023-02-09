@@ -1,7 +1,8 @@
 from django.http import JsonResponse
 
-from app.internal.services.api_service import get_user_info
+from app.internal.services.user_service import get_user, get_user_info
 
 
 def me(request, phone_number):
-    return JsonResponse(get_user_info(phone_number))
+    user = get_user(phone_number=phone_number).get()
+    return JsonResponse(get_user_info(user))

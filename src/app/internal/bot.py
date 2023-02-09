@@ -5,6 +5,7 @@ from config.settings import TELEGRAM_BOT
 
 def setup_webhook():
     if not TELEGRAM_BOT["webhook_mode"]:
+        requests.post(TELEGRAM_BOT["telegram_url"] + "setWebhook", data={"url": ""})
         return
 
     response = requests.post(TELEGRAM_BOT["telegram_url"] + "setWebhook", data=TELEGRAM_BOT["WEBHOOK_INFO"])

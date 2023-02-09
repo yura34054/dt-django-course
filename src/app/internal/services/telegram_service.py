@@ -1,18 +1,9 @@
 from app.internal.bot import send_message
-from app.internal.models.user import User
+from app.internal.services import user_service
 
 
 def start(context):
-    user_info = context["user"]
-    if User.objects.filter(chat_id=user_info["id"]).exists():
-        return
-
-    User.objects.create(
-        chat_id=user_info["id"],
-        first_name=user_info["first_name"],
-        last_name=user_info.get("last_name", ""),
-        username=user_info.get("username", ""),
-    )
+    user_service.create_user(context["user"])
 
     params = {
         "chat_id": context["user"]["id"],
@@ -34,26 +25,22 @@ def update_user_phone(context):
     if context["user"]["id"] != context["contact"].get("user_id"):
         return
 
-    User.objects.filter(chat_id=context["user"]["id"]).update(phone_number=context["contact"]["phone_number"])
+    user = user_service.get_user(chat_id=context["user"]["id"])
+    user_service.update_user_phone(user, context["contact"]["phone_number"])
 
     params = {"chat_id": context["user"]["id"], "text": "Thanks", "reply_markup": '{"remove_keyboard":true}'}
     send_message(params)
 
 
 def me(context):
-    user = User.objects.get(chat_id=context["user"]["id"])
+    user = user_service.get_user(chat_id=context["user"]["id"]).get()
     params = {"chat_id": user.chat_id, "text": "to use this method you need to provide your phone (/set_phone)"}
 
-    if user.phone_number is None:
+    user_info = user_service.get_user_info(user)
+
+    if len(user_info) == 0:
         send_message(params)
         return
-
-    user_info = {
-        "First_name": user.first_name,
-        "Last_name": user.last_name,
-        "Username": user.username,
-        "Phone_number": user.phone_number,
-    }
 
     params["text"] = "\n".join((f"{param}: {value}" for param, value in user_info.items()))
     send_message(params)
