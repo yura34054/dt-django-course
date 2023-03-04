@@ -1,22 +1,20 @@
 import requests
+from telegram.ext import CommandHandler, Filters, MessageHandler, Updater
 
+from app.internal.services.telegram_service import me, set_phone, start, update_user_phone
 from config.settings import TELEGRAM_BOT
 
 
-def setup_webhook():
-    if not TELEGRAM_BOT["webhook_mode"]:
-        requests.post(TELEGRAM_BOT["telegram_url"] + "setWebhook", data={"url": ""})
-        return
+def run() -> None:
+    updater = Updater(TELEGRAM_BOT["bot_token"])
 
-    response = requests.post(TELEGRAM_BOT["telegram_url"] + "setWebhook", data=TELEGRAM_BOT["WEBHOOK_INFO"])
-    response = response.json()
+    dispatcher = updater.dispatcher
 
-    if response.get("result", False):
-        print("webhook set successfully:", response.get("description"))
+    dispatcher.add_handler(CommandHandler("start", start))
+    dispatcher.add_handler(CommandHandler("set_phone", set_phone))
+    dispatcher.add_handler(MessageHandler(Filters.contact, update_user_phone))
+    dispatcher.add_handler(CommandHandler("me", me))
 
-    else:
-        print("could not setup webhook:", response.get("description"))
+    updater.start_polling()
 
-
-def send_message(params):
-    return requests.post(TELEGRAM_BOT["telegram_url"] + "sendMessage", data=params)
+    updater.idle()

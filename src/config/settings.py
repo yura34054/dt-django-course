@@ -23,6 +23,7 @@ env = environ.Env(
     TELEGRAM_SECRET_TOKEN=(str, ""),
     URL=(str, ""),
     DROP_PENDING_UPDATES=(bool, False),
+    ALLOWED_HOSTS=(str, "[]"),
 )
 
 
@@ -42,7 +43,7 @@ SECRET_KEY = env("SECRET_KEY")
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = env("DEBUG")
 
-ALLOWED_HOSTS = ["localhost", "127.0.0.1", "*"]
+ALLOWED_HOSTS = list(env("ALLOWED_HOSTS"))
 
 
 # Application definition
@@ -147,11 +148,10 @@ AUTH_USER_MODEL = "app.AdminUser"
 TELEGRAM_BOT = {
     "bot_token": env("TELEGRAM_TOKEN"),
     "webhook_mode": env("WEBHOOK_MODE"),
+    "telegram_url": f'https://api.telegram.org/bot{env("TELEGRAM_TOKEN")}/',
     "WEBHOOK_INFO": {
         "secret_token": env("TELEGRAM_SECRET_TOKEN"),
         "url": f'{env("URL")}/api/telegram_webhook/',
         "drop_pending_updates": env("DROP_PENDING_UPDATES"),
     },
 }
-
-TELEGRAM_BOT.update({"telegram_url": f'https://api.telegram.org/bot{env("TELEGRAM_TOKEN")}/'})

@@ -1,81 +1,40 @@
-from app.internal.bot import send_message
+from telegram import KeyboardButton, ReplyKeyboardMarkup, ReplyKeyboardRemove, Update
+from telegram.ext import CallbackContext
+
 from app.internal.services import user_service
 
 
-def start(context):
-    user_service.create_user(context["user"])
-
-    params = {
-        "chat_id": context["user"]["id"],
-        "text": "Hi!",
-    }
-    send_message(params)
+def start(update: Update, context: CallbackContext):
+    user_service.create_user(update.message.from_user)
+    update.message.reply_text("Hi!")
 
 
-def set_phone(context):
-    params = {
-        "chat_id": context["user"]["id"],
-        "text": "Give me your phone number",
-        "reply_markup": '{"keyboard":[[{"text":"Send phone number","request_contact":true}]]}',
-    }
-    send_message(params)
+def set_phone(update: Update, context: CallbackContext):
+    update.message.reply_text(
+        "Give me your phone number",
+        reply_markup=ReplyKeyboardMarkup([[KeyboardButton("Send phone number", request_contact=True)]]),
+    )
 
 
-def update_user_phone(context):
-    if context["user"]["id"] != context["contact"].get("user_id"):
+def update_user_phone(update: Update, context: CallbackContext):
+    if update.message.from_user.id != update.message.contact.user_id:
         return
 
-    user = user_service.get_user(chat_id=context["user"]["id"])
-    user_service.update_user_phone(user, context["contact"]["phone_number"])
+    user = user_service.get_user(telegram_id=update.message.from_user.id)
+    user_service.update_user_phone(user, update.message.contact.phone_number)
 
-    params = {"chat_id": context["user"]["id"], "text": "Thanks", "reply_markup": '{"remove_keyboard":true}'}
-    send_message(params)
+    update.message.reply_text(
+        "Thanks",
+        reply_markup=ReplyKeyboardRemove(),
+    )
 
 
-def me(context):
-    user = user_service.get_user(chat_id=context["user"]["id"]).get()
-    params = {"chat_id": user.chat_id, "text": "to use this method you need to provide your phone (/set_phone)"}
-
+def me(update: Update, context: CallbackContext):
+    user = user_service.get_user(telegram_id=update.message.from_user.id)
     user_info = user_service.get_user_info(user)
 
     if len(user_info) == 0:
-        send_message(params)
+        update.message.reply_text("To use this method you need to provide your phone (/set_phone)")
         return
 
-    params["text"] = "\n".join((f"{param}: {value}" for param, value in user_info.items()))
-    send_message(params)
-
-
-def handle_message(context):
-    if context["contact"] is not None:
-        update_user_phone(context)
-
-
-def handle_command(context):
-    match context["text"]:
-        case "/start":
-            start(context)
-
-        case "/set_phone":
-            set_phone(context)
-
-        case "/me":
-            me(context)
-
-        case _:
-            pass
-
-
-def handle_update(update: dict):
-    if "message" in update:
-        context = {
-            "user": update["message"].get("from"),
-            "text": update["message"].get("text", ""),
-            "contact": update["message"].get("contact"),
-        }
-
-        if context["text"].startswith("/"):
-            handle_command(context)
-
-        else:
-            handle_message(context)
+    update.message.reply_text("\n".join((f"{param}: {value}" for param, value in user_info.items())))

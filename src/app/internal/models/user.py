@@ -3,7 +3,7 @@ from django.db import models
 
 
 class User(models.Model):
-    chat_id = models.IntegerField()
+    telegram_id = models.IntegerField(primary_key=True)
     first_name = models.CharField(max_length=255)
     last_name = models.CharField(max_length=255, blank=True)
     username = models.CharField(max_length=255, blank=True)
