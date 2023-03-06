@@ -33,23 +33,16 @@ Create .env file, don't forget to change the data
 cp .env.example .env
 ```
 
-Because server will be local you need to use ngrok or other tool to route the connection, add your URL to .env file, 
-``` bash
-ngrok http 8000
-```
-
-Finally you can run the server
+Finally, you can run the server and telegram bot
 ``` bash
 make dev
+make bot
 ```
 
 
 ## Possible problems
-* This bot works in webhook mode. If you want, you can run a parallel process getting updates and sending them to localhost.
+* This bot works only in polling mode. There are plans to add webhook mode support.
 * Some code assumes that telegram blocks all messaging before the first /start command, this can lead to problems if you are removing data from database.
-
-## Known issues
-* webhook initialization can run more than once producing "Too Many Requests" error message
 
 ## Getting help
 If you have a problem setting up or a question you can contact me:
