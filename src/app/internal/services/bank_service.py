@@ -23,6 +23,6 @@ def get_accounts(owner_id=None) -> QuerySet | None:
 def get_accounts_info(accounts: QuerySet) -> dict:
     """return info about user if he has his phone set, else empty dict"""
 
-    info = {f"account No:{n}": account.money for n, account in enumerate(accounts)}
+    info = {f"account №{n}": account.money for n, account in enumerate(accounts)}
 
     return info
