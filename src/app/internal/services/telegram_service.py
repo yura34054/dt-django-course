@@ -1,7 +1,7 @@
 from telegram import KeyboardButton, ReplyKeyboardMarkup, ReplyKeyboardRemove, Update
 from telegram.ext import CallbackContext
 
-from app.internal.services import user_service, bank_service
+from app.internal.services import bank_service, user_service
 
 
 def start(update: Update, context: CallbackContext):

@@ -4,21 +4,20 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('app', '0002_user_alter_adminuser_options'),
+        ("app", "0002_user_alter_adminuser_options"),
     ]
 
     operations = [
         migrations.CreateModel(
-            name='BankAccount',
+            name="BankAccount",
             fields=[
-                ('owner_id', models.IntegerField(primary_key=True, serialize=False)),
-                ('money', models.DecimalField(decimal_places=2, max_digits=11)),
+                ("owner_id", models.IntegerField(primary_key=True, serialize=False)),
+                ("money", models.DecimalField(decimal_places=2, max_digits=11)),
             ],
             options={
-                'verbose_name': 'Bank account',
-                'verbose_name_plural': 'Bank accounts',
+                "verbose_name": "Bank account",
+                "verbose_name_plural": "Bank accounts",
             },
         ),
     ]

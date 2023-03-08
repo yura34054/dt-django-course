@@ -1,6 +1,6 @@
 from telegram.ext import CommandHandler, Filters, MessageHandler, Updater
 
-from app.internal.services.telegram_service import me, set_phone, start, update_user_phone, bank_status
+from app.internal.services.telegram_service import bank_status, me, set_phone, start, update_user_phone
 from config.settings import TELEGRAM_BOT
 
 

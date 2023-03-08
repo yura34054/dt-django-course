@@ -33,7 +33,7 @@ def update_user_phone(user: User, phone_number) -> None:
 def get_user_info(user: User) -> dict:
     """return info about user if he has his phone set, else empty dict"""
 
-    if user.phone_number == '':
+    if user.phone_number == "":
         return {}
 
     user_info = {
