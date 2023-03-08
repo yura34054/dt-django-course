@@ -39,10 +39,25 @@ make dev
 make bot
 ```
 
+## Running with docker-compose
+Create app image
+``` bash
+make docker_build
+```
+And run all services at once
+``` bash
+make docker_up
+```
+Then, you can deactivate with 
+``` bash
+make docker_down
+```
+
 
 ## Possible problems
-* This bot works only in polling mode. There are plans to add webhook mode support.
-* Some code assumes that telegram blocks all messaging before the first /start command, this can lead to problems if you are removing data from database.
+* For now this bot works only in polling mode.
+* Some code assumes that telegram blocks all messaging before the first /start command, 
+this can lead to problems if you are removing data from database.
 
 ## Getting help
 If you have a problem setting up or a question you can contact me:
