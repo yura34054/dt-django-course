@@ -1,4 +1,3 @@
-import requests
 from telegram.ext import CommandHandler, Filters, MessageHandler, Updater
 
 from app.internal.services.telegram_service import me, set_phone, start, update_user_phone

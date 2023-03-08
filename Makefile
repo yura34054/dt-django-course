@@ -39,3 +39,12 @@ check_lint:
 	isort --check --diff .
 	flake8 --config setup.cfg
 	black --check --config pyproject.toml .
+
+docker_build:
+	docker image build -t 'django-bot:1' .
+
+docker_up:
+	docker-compose up -d
+
+docker_down:
+	docker-compose down
