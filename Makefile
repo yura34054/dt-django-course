@@ -46,5 +46,8 @@ docker_build:
 docker_up:
 	docker-compose up -d
 
+docker_migrate:
+	docker exec -it dt-django-homework-web-1 python manage.py migrate
+
 docker_down:
 	docker-compose down

@@ -2,7 +2,7 @@ from django.db import models
 
 
 class BankAccount(models.Model):
-    owner_id = models.IntegerField(primary_key=True)
+    owner_id = models.IntegerField()
     money = models.DecimalField(max_digits=11, decimal_places=2)
 
     # def __str__(self):
