@@ -1,3 +1,5 @@
+include .env
+
 make all: docker_build docker_up docker_migrate
 
 migrate:
