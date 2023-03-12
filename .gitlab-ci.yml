@@ -1,0 +1,47 @@
+image: docker/compose:alpine-1.28.0
+
+stages:
+  - build
+  - lint
+  - deploy
+
+before_script:
+  - apk add make
+  - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
+  - cp $DOT_ENV $(pwd)/.env
+
+build:
+  stage: build
+  script:
+    - make docker_build docker_push
+  tags:
+    - job:build
+  only:
+    - master
+    - dev
+  environment:
+    name: test/prod
+
+lint:
+  stage: lint
+  script:
+    - make lint
+  tags:
+    - job:test
+  only:
+    - master
+    - dev
+  environment:
+    name: test/prod
+
+deploy:
+  stage: deploy
+  script:
+    - make docker_pull docker_down docker_up docker_migrate
+  tags:
+    - job:deploy
+  only:
+    - master
+  environment:
+    name: prod
+  when: manual

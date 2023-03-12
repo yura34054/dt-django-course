@@ -1,3 +1,5 @@
+make all: docker_build docker_up docker_migrate
+
 migrate:
 	python src/manage.py migrate $(if $m, api $m,)
 
@@ -41,7 +43,13 @@ check_lint:
 	black --check --config pyproject.toml .
 
 docker_build:
-	docker image build -t 'django-bot:1' .
+	docker build -t ${IMAGE_APP} .
+
+docker_push:
+	docker push ${IMAGE_APP}
+
+docker_pull:
+	docker pull ${IMAGE_APP}
 
 docker_up:
 	docker-compose up -d
@@ -51,5 +59,3 @@ docker_migrate:
 
 docker_down:
 	docker-compose down
-
-docker: docker_build docker_up docker_migrate
