@@ -51,3 +51,5 @@ docker_migrate:
 
 docker_down:
 	docker-compose down
+
+docker: docker_build docker_up docker_migrate

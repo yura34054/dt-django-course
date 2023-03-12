@@ -2,7 +2,7 @@ from telegram import KeyboardButton, ReplyKeyboardMarkup, ReplyKeyboardRemove, U
 from telegram.ext import CallbackContext
 
 from app.internal.decorators.telegram_decorators import logged, requires_phone
-from app.internal.services import bank_service, user_service
+from app.internal.services import bank_account_service, bank_card_service, user_service
 
 
 @logged
@@ -45,9 +45,9 @@ def me(update: Update, context: CallbackContext):
 @requires_phone
 @logged
 def bank_status(update: Update, context: CallbackContext):
-    info = bank_service.get_accounts_info(owner_id=update.message.from_user.id)
+    info = bank_account_service.get_accounts_info(owner_id=update.message.from_user.id)
     if info is None:
         update.message.reply_text("No bank accounts found")
         return
 
-    update.message.reply_text("\n".join((f"{param}: {value}" for param, value in info.items())))
+    update.message.reply_text("\n".join(info))
