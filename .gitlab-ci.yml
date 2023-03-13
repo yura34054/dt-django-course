@@ -25,7 +25,8 @@ build:
 lint:
   stage: lint
   script:
-    - make lint
+    - pip install isort flake8 black
+    - make check_lint
   tags:
     - job:test
   only:
@@ -33,6 +34,18 @@ lint:
     - dev
   environment:
     name: test/prod
+
+test-deploy:
+  stage: test-deploy
+  script:
+    - make docker_pull docker_down docker_up docker_migrate
+  tags:
+    - job:test-deploy
+  only:
+    - dev
+  environment:
+    name: test/prod
+  when: manual
 
 deploy:
   stage: deploy
