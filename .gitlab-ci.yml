@@ -47,7 +47,6 @@ test-deploy:
     - dev
   environment:
     name: test/prod
-  when: manual
 
 deploy:
   stage: deploy
