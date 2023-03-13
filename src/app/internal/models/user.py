@@ -18,7 +18,7 @@ class User(models.Model):
     )
 
     def __str__(self):
-        return f"{self.first_name} {self.last_name} ({self.chat_id})"
+        return f"{self.first_name} {self.last_name} ({self.telegram_id})"
 
     class Meta:
         verbose_name = "User"
