@@ -7,7 +7,7 @@ stages:
   - deploy
 
 before_script:
-  - apk add make python
+  - apk add make
   - apk add --no-cache python3 py3-pip
   - docker login -u ${CI_REGISTRY_USER} -p ${CI_REGISTRY_PASSWORD} ${CI_REGISTRY}
   - cp $DOT_ENV $(pwd)/.env
@@ -27,6 +27,7 @@ build:
 lint:
   stage: lint
   script:
+    - pip install isort flake8 black
     - make check_lint
   tags:
     - job:test
