@@ -27,7 +27,6 @@ build:
 lint:
   stage: lint
   script:
-    - pip install isort flake8 black
     - make check_lint
   tags:
     - job:test
