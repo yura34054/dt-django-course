@@ -1,8 +1,8 @@
 image: docker/compose:alpine-1.28.0
 
 stages:
-  - build
   - lint
+  - build
   - deploy.test
   - deploy
 
