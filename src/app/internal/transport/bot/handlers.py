@@ -46,7 +46,7 @@ def me(update: Update, context: CallbackContext):
 @logged
 def bank_status(update: Update, context: CallbackContext):
     info = bank_account_service.get_accounts_info(owner_id=update.message.from_user.id)
-    if info is None:
+    if len(info) == 0:
         update.message.reply_text("No bank accounts found")
         return
 
