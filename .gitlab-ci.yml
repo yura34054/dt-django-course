@@ -55,7 +55,6 @@ deploy:
   tags:
     - job:deploy
   only:
-    - dev
     - master
   environment:
     name: prod
