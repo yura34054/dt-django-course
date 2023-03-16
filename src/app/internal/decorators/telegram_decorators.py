@@ -10,7 +10,7 @@ def requires_phone(func):
         user = user_service.get_user(telegram_id=update.message.from_user.id)
 
         if user.phone_number == "":
-            update.message.reply_text("To use this method you need to provide your phone (/set_phone)")
+            update.message.reply_text("To use this method you need to provide your phone (/set_phone) !!!this is new!!!")
 
         else:
             func(update, context)
