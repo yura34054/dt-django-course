@@ -15,10 +15,10 @@ def create_user(user_info) -> None:
     )
 
 
-def get_user(telegram_id=None, phone_number=None) -> User | None:
+def get_user(telegram_id=None, phone_number=None, username=None) -> User | None:
     """returns User object if user exists, else None"""
 
-    user = User.objects.filter(Q(telegram_id=telegram_id) | Q(phone_number=phone_number))
+    user = User.objects.filter(Q(telegram_id=telegram_id) | Q(phone_number=phone_number) | Q(username=username))
     if not user.exists():
         return None
 

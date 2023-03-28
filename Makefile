@@ -54,7 +54,7 @@ docker_pull:
 	docker pull ${IMAGE_APP}
 
 docker_up:
-	docker-compose --compatibility up -d
+	docker-compose --compatibility up
 
 docker_migrate:
 	docker exec dt-django-homework_web_1 python manage.py migrate
