@@ -64,11 +64,11 @@ def add_card(update: Update, context: CallbackContext):
     )
 
 
-def send_money_by_account(update: Update, context: CallbackContext):
+def send_money(update: Update, context: CallbackContext):
     if len(update.message.text.split()) != 5:
         update.message.reply_text(
             "Use this command with three parameters: " +
-            "/send_money_by_account {receiver username} {your account name} {receiver account name} {amount}"
+            "/send_money {receiver username} {your account name} {receiver account name} {amount}"
         )
         return
 

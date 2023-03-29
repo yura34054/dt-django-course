@@ -72,6 +72,9 @@ def send_money(owner_id, receiver_username, account_name, receiver_account_name,
     if receiver is None:
         return f"Receiver {receiver_username} not found"
 
+    if receiver not in get_user(telegram_id=owner_id).friends.all():
+        return f"You need to add {receiver_username} to your friend list first by using /add_friend"
+
     receiver_account = get_account(receiver.telegram_id, receiver_account_name)
 
     if account is None:
@@ -89,4 +92,4 @@ def send_money(owner_id, receiver_username, account_name, receiver_account_name,
     account.save()
     receiver_account.save()
 
-    return f"Successfully sent {amount} to @{receiver_username}"
+    return f"Successfully sent {amount} to {receiver_username}"
