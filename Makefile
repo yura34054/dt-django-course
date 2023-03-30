@@ -54,7 +54,7 @@ docker_push:
 
 docker_pull:
 	docker pull ${IMAGE_APP}
-	docker push ${IMAGE_NGINX}
+	docker pull ${IMAGE_NGINX}
 
 docker_up:
 	docker-compose up -d
