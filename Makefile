@@ -46,9 +46,11 @@ check_lint:
 
 docker_build:
 	docker build -t ${IMAGE_APP} .
+	docker build -t ${IMAGE_NGINX} ./nginx
 
 docker_push:
 	docker push ${IMAGE_APP}
+	docker push ${IMAGE_NGINX}
 
 docker_pull:
 	docker pull ${IMAGE_APP}
