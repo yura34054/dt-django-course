@@ -25,8 +25,7 @@ def run() -> None:
     dispatcher.add_handler(CommandHandler("send_money", bot.send_money))
 
     updater.start_webhook(
-        port=TELEGRAM_BOT["webhook_port"],
-        url_path=TELEGRAM_BOT["url_path"],
-        webhook_url=TELEGRAM_BOT["webhook_url"])
+        port=TELEGRAM_BOT["webhook_port"], url_path=TELEGRAM_BOT["url_path"], webhook_url=TELEGRAM_BOT["webhook_url"]
+    )
 
     updater.idle()
