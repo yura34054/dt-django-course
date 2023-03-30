@@ -1,4 +1,4 @@
-from django.db.models import QuerySet, Q
+from django.db.models import Q, QuerySet
 
 from app.internal.models.bank_account import BankAccount
 from app.internal.services.user_service import get_user
@@ -10,7 +10,7 @@ def create_account(user_info, name):
     owner = get_user(user_info.id)
 
     if get_account(user_info.id, name) is not None:
-        return f"Account \"{name}\" already exists"
+        return f'Account "{name}" already exists'
 
     BankAccount.objects.create(
         owner=owner,
@@ -18,7 +18,7 @@ def create_account(user_info, name):
         money=0,
     )
 
-    return f"Account \"{name}\" successfully created"
+    return f'Account "{name}" successfully created'
 
 
 def get_account(owner_id, name) -> BankAccount | None:
@@ -40,11 +40,7 @@ def get_account_info(owner_id, name) -> dict:
     if account is None:
         return {}
 
-    info = {
-        "name": account.name,
-        "money": account.money,
-        "cards": list((c.name for c in account.bankcard_set.all()))
-    }
+    info = {"name": account.name, "money": account.money, "cards": list((c.name for c in account.bankcard_set.all()))}
 
     return info
 
@@ -64,7 +60,6 @@ def get_accounts(owner_id):
 
 
 def send_money(owner_id, receiver_username, account_name, receiver_account_name, amount):
-
     amount = round(float(amount), 2)
     account = get_account(owner_id, account_name)
 

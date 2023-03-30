@@ -7,11 +7,14 @@ services:
     env_file:
       - .env
 
+    volumes:
+      - static_volume:/app/static/
+
     environment:
       - WAIT_HOSTS:${DB_HOST}:${DB_PORT}
 
-    ports:
-      - ${PORT}:8000
+    expose:
+      - ${PORT}
 
     depends_on:
       - db
@@ -41,5 +44,15 @@ services:
     volumes:
       - postgres_data:/var/lib/postgresql/data/
 
+  nginx:
+    build: ./nginx
+    volumes:
+      - static_volume:/app/static/
+    ports:
+      - 1337:80
+    depends_on:
+      - web
+
 volumes:
   postgres_data:
+  static_volume:

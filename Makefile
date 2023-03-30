@@ -1,6 +1,6 @@
 include .env
 
-make all: docker_build docker_down docker_up docker_migrate
+make all: collectstatic docker_build docker_down docker_up docker_migrate
 
 migrate:
 	python src/manage.py migrate $(if $m, api $m,)
@@ -54,10 +54,10 @@ docker_pull:
 	docker pull ${IMAGE_APP}
 
 docker_up:
-	docker-compose --compatibility up -d
+	docker-compose up -d
 
 docker_migrate:
-	docker exec dt-django-homework_web_1 python manage.py migrate
+	docker exec dt-django-homework-web-1 python manage.py migrate
 
 docker_down:
 	docker-compose down

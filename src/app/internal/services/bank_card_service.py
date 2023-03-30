@@ -1,8 +1,8 @@
-from django.db.models import QuerySet, Q
+from django.db.models import Q, QuerySet
 
 from app.internal.models.bank_account import BankAccount
 from app.internal.models.bank_card import BankCard
-from app.internal.services.bank_account_service import get_account, create_account
+from app.internal.services.bank_account_service import create_account, get_account
 from app.internal.services.user_service import get_user
 
 
@@ -12,17 +12,17 @@ def create_card(user_info, bank_account_name, name):
     bank_account = get_account(user_info.id, bank_account_name)
 
     if bank_account is None:
-        return f"No account \"{bank_account_name}\" found"
+        return f'No account "{bank_account_name}" found'
 
     if get_card(bank_account_name, name) is not None:
-        return f"Card \"{name}\" already exists"
+        return f'Card "{name}" already exists'
 
     BankCard.objects.create(
         bank_account=bank_account,
         name=name,
     )
 
-    return f"Card \"{name}\" successfully created"
+    return f'Card "{name}" successfully created'
 
 
 def get_card(bank_account_name, name):
