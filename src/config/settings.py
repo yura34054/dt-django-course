@@ -157,9 +157,8 @@ TELEGRAM_BOT = {
     "bot_token": env("TELEGRAM_TOKEN"),
     "webhook_mode": env("WEBHOOK_MODE"),
     "telegram_url": f'https://api.telegram.org/bot{env("TELEGRAM_TOKEN")}/',
-    "WEBHOOK_INFO": {
-        "secret_token": env("TELEGRAM_SECRET_TOKEN"),
-        "url": f'{env("URL")}/api/telegram_webhook/',
-        "drop_pending_updates": env("DROP_PENDING_UPDATES"),
-    },
+
+    "webhook_port": 88,
+    "url_path": "/telegram_webhook/",
+    "webhook_url": f'{env("URL")}/telegram_webhook/',
 }
