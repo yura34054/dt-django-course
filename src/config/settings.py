@@ -161,3 +161,5 @@ TELEGRAM_BOT = {
     "url_path": "/telegram-webhook/",
     "webhook_url": f'{env("URL")}/telegram-webhook/',
 }
+
+CSRF_TRUSTED_ORIGINS = ["https://yura-m.backend23.2tapp.cc", "https://yura-m.backend23.2tapp.cc"]
