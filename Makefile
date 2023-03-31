@@ -1,6 +1,6 @@
 include .env
 
-make all: collectstatic docker_build docker_down docker_up docker_migrate
+make all: docker_build docker_down docker_up docker_migrate
 
 migrate:
 	python src/manage.py migrate $(if $m, api $m,)
