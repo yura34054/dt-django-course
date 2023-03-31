@@ -46,6 +46,7 @@ services:
 
   nginx:
     build: ./nginx
+    image: ${IMAGE_NGINX}
     volumes:
       - static_volume:/app/static/
     ports:
