@@ -14,7 +14,7 @@ services:
       - WAIT_HOSTS:${DB_HOST}:${DB_PORT}
 
     expose:
-      - ${PORT}
+      - ${WEB_PORT_INTERNAL}
 
     depends_on:
       - db
@@ -29,12 +29,14 @@ services:
     environment:
       - WAIT_HOSTS:${DB_HOST}:${DB_PORT}
 
+    expose:
+      - ${BOT_PORT_INTERNAL}
+
     depends_on:
       - db
 
   db:
     image: postgres
-
     environment:
       - WAIT_HOSTS:${DB_HOST}:${DB_PORT}
       - POSTGRES_USER=${DB_USER}
@@ -49,10 +51,13 @@ services:
     image: ${IMAGE_NGINX}
     volumes:
       - static_volume:/app/static/
+
     ports:
       - 1337:80
+
     depends_on:
       - web
+      - bot
 
 volumes:
   postgres_data:

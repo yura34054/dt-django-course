@@ -21,7 +21,7 @@ env = environ.Env(
     TELEGRAM_TOKEN=(str, ""),
     WEBHOOK_MODE=(bool, True),
     TELEGRAM_SECRET_TOKEN=(str, ""),
-    URL=(str, ""),
+    DOMAIN=(str, ""),
     DROP_PENDING_UPDATES=(bool, False),
     ALLOWED_HOSTS=(str, "[]"),
     DB_NAME=(str, ""),
@@ -159,7 +159,7 @@ TELEGRAM_BOT = {
     "telegram_url": f'https://api.telegram.org/bot{env("TELEGRAM_TOKEN")}/',
     "webhook_port": 88,
     "url_path": "/telegram-webhook/",
-    "webhook_url": f'{env("URL")}/telegram-webhook/',
+    "webhook_url": f'{env("DOMAIN")}/telegram-webhook/',
 }
 
-CSRF_TRUSTED_ORIGINS = ["https://yura-m.backend23.2tapp.cc", "https://yura-m.backend23.2tapp.cc"]
+CSRF_TRUSTED_ORIGINS = [env("DOMAIN")]
