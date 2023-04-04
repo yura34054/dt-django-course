@@ -156,10 +156,10 @@ AUTH_USER_MODEL = "app.AdminUser"
 TELEGRAM_BOT = {
     "bot_token": env("TELEGRAM_TOKEN"),
     "webhook_mode": env("WEBHOOK_MODE"),
-    "telegram_url": f'https://api.telegram.org/bot{env("TELEGRAM_TOKEN")}/',
-    "webhook_port": 88,
     "url_path": "/telegram-webhook/",
-    "webhook_url": f'{env("DOMAIN")}/telegram-webhook/',
+    "webhook_url": f'{env("DOMAIN")}/api/telegram-webhook/',
+    "secret_token": env("TELEGRAM_SECRET_TOKEN"),
+    "drop_pending_updates": env("DROP_PENDING_UPDATES"),
 }
 
 CSRF_TRUSTED_ORIGINS = [env("DOMAIN")]

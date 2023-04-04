@@ -1,14 +1,26 @@
-from telegram.ext import CommandHandler, Filters, MessageHandler, Updater
+from telegram.ext import CommandHandler, Filters, MessageHandler, Dispatcher
+from telegram import Bot
+from threading import Thread
+from queue import Queue
 
 from app.internal.transport import bot
 from config.settings import TELEGRAM_BOT
 
 
-def run() -> None:
-    updater = Updater(TELEGRAM_BOT["bot_token"])
+def setup():
+    # Create bot, update queue and dispatcher instances
+    telegram_bot = Bot(TELEGRAM_BOT["bot_token"])
+    telegram_bot.set_webhook(
+        url=TELEGRAM_BOT["webhook_url"],
+        drop_pending_updates=TELEGRAM_BOT["drop_pending_updates"],
+        secret_token=TELEGRAM_BOT["secret_token"],
+    )
 
-    dispatcher = updater.dispatcher
+    update_queue = Queue()
 
+    dispatcher = Dispatcher(telegram_bot, update_queue)
+
+    # Register handlers
     dispatcher.add_handler(CommandHandler("start", bot.start))
     dispatcher.add_handler(CommandHandler("set_phone", bot.set_phone))
     dispatcher.add_handler(MessageHandler(Filters.contact, bot.update_user_phone))
@@ -24,8 +36,12 @@ def run() -> None:
     dispatcher.add_handler(CommandHandler("bank_status", bot.bank_status))
     dispatcher.add_handler(CommandHandler("send_money", bot.send_money))
 
-    updater.start_webhook(
-        port=TELEGRAM_BOT["webhook_port"], url_path=TELEGRAM_BOT["url_path"], webhook_url=TELEGRAM_BOT["webhook_url"]
-    )
+    # Start the thread
+    thread = Thread(target=dispatcher.start, name='dispatcher')
+    thread.daemon = True  # I DO NOT UNDERSTAND HOW THIS WORKS
+    thread.start()
 
-    updater.idle()
+    return telegram_bot, update_queue
+
+
+telegram_bot, update_queue = setup()
