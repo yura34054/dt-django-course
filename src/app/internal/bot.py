@@ -1,7 +1,8 @@
-from telegram.ext import CommandHandler, Filters, MessageHandler, Dispatcher
-from telegram import Bot
-from threading import Thread
 from queue import Queue
+from threading import Thread
+
+from telegram import Bot
+from telegram.ext import CommandHandler, Dispatcher, Filters, MessageHandler
 
 from app.internal.transport import bot
 from config.settings import TELEGRAM_BOT
@@ -37,7 +38,7 @@ def setup():
     dispatcher.add_handler(CommandHandler("send_money", bot.send_money))
 
     # Start the thread
-    thread = Thread(target=dispatcher.start, name='dispatcher')
+    thread = Thread(target=dispatcher.start, name="dispatcher")
     thread.daemon = True  # I DO NOT UNDERSTAND HOW THIS WORKS
     thread.start()
 

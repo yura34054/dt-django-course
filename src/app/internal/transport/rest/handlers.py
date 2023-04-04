@@ -1,11 +1,11 @@
-from django.http import JsonResponse, HttpResponse
-from telegram import Update
 import json
 
-from app.internal.services.user_service import get_user, get_user_info
-from app.internal.bot import update_queue, telegram_bot
-
+from django.http import HttpResponse, JsonResponse
 from django.views.decorators.csrf import csrf_exempt
+from telegram import Update
+
+from app.internal.bot import telegram_bot, update_queue
+from app.internal.services.user_service import get_user, get_user_info
 
 
 def me(request, phone_number):
