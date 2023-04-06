@@ -4,40 +4,36 @@ services:
     build: ./src
     image: ${IMAGE_APP}
     command: gunicorn config.wsgi:application --bind 0.0.0.0:8000
+    restart: always
     env_file:
       - .env
-
     environment:
       - WAIT_HOSTS:${DB_HOST}:${DB_PORT}
-
     volumes:
       - static_volume:/app/static/
-
     expose:
       - ${WEB_PORT_INTERNAL}
-
     depends_on:
       - db
 
   db:
     image: postgres
+    restart: always
     environment:
       - POSTGRES_USER=${DB_USER}
       - POSTGRES_PASSWORD=${DB_PASSWORD}
       - POSTGRES_DB=${DB_NAME}
-
     volumes:
       - postgres_data:/var/lib/postgresql/data/
 
   nginx:
     build: ./nginx
     image: ${IMAGE_NGINX}
+    restart: always
     volumes:
       - static_volume:/app/static/
-
     ports:
-      - 1337:80
-
+      - "1337:80"
     depends_on:
       - web
 

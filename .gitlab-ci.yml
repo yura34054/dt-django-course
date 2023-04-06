@@ -44,9 +44,10 @@ deploy.test:
   tags:
     - job:deploy.test
   only:
-    - master
+    - dev
   environment:
     name: test
+  when: manual
 
 deploy:
   stage: deploy
@@ -56,6 +57,7 @@ deploy:
     - job:deploy
   only:
     - dev
+    - master
   environment:
     name: prod
   when: manual

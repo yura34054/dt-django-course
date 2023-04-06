@@ -6,6 +6,7 @@ from app.internal.services import bank_account_service, bank_card_service
 
 
 @requires_phone
+@logged
 def bank_account_info(update: Update, context: CallbackContext):
     if len(update.message.text.split()) != 2:
         update.message.reply_text("Use this command with one parameter: /bank_account_info {account name}")
@@ -22,6 +23,7 @@ def bank_account_info(update: Update, context: CallbackContext):
 
 
 @requires_phone
+@logged
 def bank_status(update: Update, context: CallbackContext):
     info = bank_account_service.get_accounts(update.message.from_user.id)
 
@@ -33,6 +35,7 @@ def bank_status(update: Update, context: CallbackContext):
 
 
 @requires_phone
+@logged
 def add_account(update: Update, context: CallbackContext):
     if len(update.message.text.split()) != 2:
         update.message.reply_text("Use this command with one parameter: /add_account {account name}")
@@ -44,6 +47,7 @@ def add_account(update: Update, context: CallbackContext):
 
 
 @requires_phone
+@logged
 def add_card(update: Update, context: CallbackContext):
     if len(update.message.text.split()) != 3:
         update.message.reply_text("Use this command with two parameters: /add_account {account name} {card name}")
@@ -54,6 +58,8 @@ def add_card(update: Update, context: CallbackContext):
     update.message.reply_text(bank_card_service.create_card(update.message.from_user, bank_account_name, name))
 
 
+@requires_phone
+@logged
 def send_money(update: Update, context: CallbackContext):
     if len(update.message.text.split()) != 5:
         update.message.reply_text(
