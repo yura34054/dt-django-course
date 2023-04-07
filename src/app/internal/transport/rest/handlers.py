@@ -1,6 +1,7 @@
 import json
 
 from django.http import HttpResponse, JsonResponse
+from django.views.decorators.csrf import csrf_exempt
 from telegram import Update
 
 from app.internal.bot import telegram_bot, update_queue
@@ -16,6 +17,7 @@ def me(request, phone_number):
     return JsonResponse(get_user_info(user), status=200)
 
 
+@csrf_exempt
 def telegram_webhook(request):
     update_queue.put(Update.de_json(json.loads(request.body), telegram_bot))
     return HttpResponse(status=200)

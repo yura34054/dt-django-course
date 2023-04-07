@@ -63,7 +63,7 @@ def add_card(update: Update, context: CallbackContext):
 def send_money(update: Update, context: CallbackContext):
     if len(update.message.text.split()) != 5:
         update.message.reply_text(
-            "Use this command with three parameters: "
+            "Use this command with four parameters: "
             "/send_money {receiver username} {your account name} {receiver account name} {amount}"
         )
         return

@@ -78,6 +78,9 @@ def send_money(owner_id, receiver_username, account_name, receiver_account_name,
     if receiver_account is None:
         return f"Receiver account {receiver_account_name} not found"
 
+    if amount < 0:
+        amount = 0
+
     if account.money < amount:
         return "Not enough money"
 
