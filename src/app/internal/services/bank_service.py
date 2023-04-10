@@ -107,14 +107,14 @@ def send_money_card(owner_id, card_id, receiver_card_id, amount):
     if amount < 0:
         amount = 0
 
-    card_from = BankCard.objects.select_for_update().filter(card_id=card_id).select_related("bank_account__owner")
+    card_from = BankCard.objects.select_for_update()\
+        .filter(card_id=card_id).select_related("bank_account__owner__telegram_id")
 
     if not card_from.exists():
         return f"Card {receiver_card_id} not found"
 
-    card_to = (
-        BankCard.objects.select_for_update().filter(card_id=receiver_card_id).select_related("bank_account__owner")
-    )
+    card_to = BankCard.objects.select_for_update()\
+        .filter(card_id=receiver_card_id).select_related("bank_account__owner")
 
     if not card_to.exists():
         return f"Receiver card {receiver_card_id} not found"
@@ -122,7 +122,7 @@ def send_money_card(owner_id, card_id, receiver_card_id, amount):
     with transaction.atomic():
         card_from = card_from.get()
 
-        if card_from.bank_account.owner != owner_id:
+        if card_from.bank_account.owner.telegram_id != owner_id:
             return f"You don't own {card_id}"
 
         card_to = card_to.get()
@@ -141,3 +141,40 @@ def send_money_card(owner_id, card_id, receiver_card_id, amount):
         )
 
     return f"Successfully sent {amount} to {receiver_card_id}"
+
+
+def get_bank_statement_account(telegram_id, account_name):
+    account = BankAccount.objects\
+        .filter(Q(owner__telegram_id=telegram_id) & Q(name=account_name))
+
+    if not account.exists():
+        return f"Account {account_name} not found"
+
+    transactions = Transaction.objects\
+        .filter(account_from=account)[100:]
+
+    if not transactions.exists():
+        return f"No transactions for account {account_name} found"
+
+    return transactions.all(), account.money
+
+
+def get_bank_statement_card(telegram_id, card_id):
+    card = BankAccount.objects\
+        .filter(Q(bank_account__owner__telegram_id=telegram_id) & Q(card_id=card_id))\
+        .select_related("bank_account__owner", "bank_account__money")
+
+    if not card.exists():
+        return f"Card {card_id} not found"
+
+    card.get()
+
+    if card.bank_account.owner.telegram_id != telegram_id:
+        return f"You don't own {card_id}"
+
+    transactions = Transaction.objects.filter(card_from=card)[100:]
+
+    if not transactions.exists():
+        return f"No transactions for card {card_id} found"
+
+    return transactions.all()
