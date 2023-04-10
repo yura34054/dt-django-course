@@ -5,10 +5,10 @@ from app.internal.models.bank_account import BankAccount
 
 class BankCard(models.Model):
     bank_account = models.ForeignKey(BankAccount, on_delete=models.CASCADE)
-    name = models.CharField(max_length=255, blank=True)
+    card_id = models.AutoField(primary_key=True)
 
     def __str__(self):
-        return f"{self.bank_account.owner.telegram_id}: {self.name}"
+        return f"{self.bank_account.owner.telegram_id}: {self.id}"
 
     class Meta:
         verbose_name = "Bank card"

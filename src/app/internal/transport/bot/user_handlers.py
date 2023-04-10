@@ -24,8 +24,7 @@ def update_user_phone(update: Update, context: CallbackContext):
     if update.message.from_user.id != update.message.contact.user_id:
         return
 
-    user = user_service.get_user(telegram_id=update.message.from_user.id)
-    user_service.update_user_phone(user, update.message.contact.phone_number)
+    user_service.update_user_phone(update.message.from_user.id, update.message.contact.phone_number)
 
     update.message.reply_text(
         "Thanks",
@@ -36,8 +35,7 @@ def update_user_phone(update: Update, context: CallbackContext):
 @requires_phone
 @logged
 def me(update: Update, context: CallbackContext):
-    user = user_service.get_user(telegram_id=update.message.from_user.id)
-    user_info = user_service.get_user_info(user)
+    user_info = user_service.get_user_info(update.message.from_user.id)
 
     update.message.reply_text("\n".join((f"{param}: {value}" for param, value in user_info.items())))
 
