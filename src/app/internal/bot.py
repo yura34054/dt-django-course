@@ -35,7 +35,8 @@ def setup():
     dispatcher.add_handler(CommandHandler("add_card", bot.add_card))
     dispatcher.add_handler(CommandHandler("bank_account_info", bot.bank_account_info))
     dispatcher.add_handler(CommandHandler("bank_status", bot.bank_status))
-    dispatcher.add_handler(CommandHandler("send_money", bot.send_money))
+    dispatcher.add_handler(CommandHandler("send_money_account", bot.send_money_account))
+    dispatcher.add_handler(CommandHandler("send_money_card", bot.send_money_card))
 
     # Start the thread
     thread = Thread(target=dispatcher.start, name="dispatcher")
