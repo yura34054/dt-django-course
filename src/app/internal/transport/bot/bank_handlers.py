@@ -81,3 +81,29 @@ def send_money_card(update: Update, context: CallbackContext):
         return
 
     update.message.reply_text(bank_service.send_money(update.message.from_user.id, *update.message.text.split()[1:]))
+
+
+def get_bank_statement_account(update: Update, context: CallbackContext):
+    if len(update.message.text.split()) != 2:
+        update.message.reply_text(
+            "Use this command with one parameter: " "/get_bank_statement_account {account_name}"
+        )
+        return
+
+    update.message.reply_text(bank_service.get_bank_statement_account(
+        update.message.from_user.id,
+        update.message.text.split()[1])
+    )
+
+
+def get_bank_statement_card(update: Update, context: CallbackContext):
+    if len(update.message.text.split()) != 2:
+        update.message.reply_text(
+            "Use this command with one parameter: " "/get_bank_statement_card {card_id}"
+        )
+        return
+
+    update.message.reply_text(bank_service.get_bank_statement_card(
+        update.message.from_user.id,
+        update.message.text.split()[1])
+    )

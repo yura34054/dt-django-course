@@ -2,6 +2,7 @@ from django.db import transaction
 from django.db.models import Q
 
 from app.internal.models.user import User
+from app.internal.models.transaction import Transaction
 
 
 def create_user(user_info) -> None:
@@ -73,3 +74,13 @@ def remove_friend(telegram_id, friend_username):
 def list_friends(telegram_id):
     user = User.objects.filter(telegram_id=telegram_id).values("friends__username")
     return list(user["friends__username"])
+
+
+def get_interactions(telegram_id):
+    users = User.objects.filter(
+        Q(bankaccount__transaction__account_from__owner__telegram_id=telegram_id) &
+        Q(bankaccount__transaction__account_to__owner__telegram_id=telegram_id) &
+        ~Q(telegram_id)
+    ).distinct()
+
+    return users

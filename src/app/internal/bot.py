@@ -38,9 +38,13 @@ def setup():
     dispatcher.add_handler(CommandHandler("send_money_account", bot.send_money_account))
     dispatcher.add_handler(CommandHandler("send_money_card", bot.send_money_card))
 
+    dispatcher.add_handler(CommandHandler("get_bank_statement_account", bot.get_bank_statement_account))
+    dispatcher.add_handler(CommandHandler("get_bank_statement_card", bot.get_bank_statement_card))
+    dispatcher.add_handler(CommandHandler("get_interactions", bot.get_interactions))
+
     # Start the thread
     thread = Thread(target=dispatcher.start, name="dispatcher")
-    thread.daemon = True  # I DO NOT UNDERSTAND HOW THIS WORKS
+    thread.daemon = True  # I DO NOT UNDERSTAND HOW THIS LINE WORKS
     thread.start()
 
     return telegram_bot, update_queue

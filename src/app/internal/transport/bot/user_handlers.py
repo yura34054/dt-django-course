@@ -74,3 +74,7 @@ def list_friends(update: Update, context: CallbackContext):
         return
 
     update.message.reply_text("Your friends:\n" ", ".join(friends))
+
+
+def get_interactions(update: Update, context: CallbackContext):
+    update.message.reply_text(user_service.get_interactions(update.message.from_user.id))
