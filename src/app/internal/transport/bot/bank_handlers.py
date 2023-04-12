@@ -43,19 +43,19 @@ def add_account(update: Update, context: CallbackContext):
 
     name = update.message.text.split()[1]
 
-    update.message.reply_text(bank_service.create_account(update.message.from_user, name))
+    update.message.reply_text(bank_service.create_account(update.message.from_user.id, name))
 
 
 @requires_phone
 @logged
 def add_card(update: Update, context: CallbackContext):
-    if len(update.message.text.split()) != 3:
+    if len(update.message.text.split()) != 2:
         update.message.reply_text("Use this command with one parameter: /add_card {account name}")
         return
 
     bank_account_name = update.message.text.split()[1]
 
-    update.message.reply_text(bank_service.create_card(update.message.from_user, bank_account_name))
+    update.message.reply_text(bank_service.create_card(update.message.from_user.id, bank_account_name))
 
 
 @requires_phone
@@ -68,21 +68,29 @@ def send_money_account(update: Update, context: CallbackContext):
         )
         return
 
-    update.message.reply_text(bank_service.send_money(update.message.from_user.id, *update.message.text.split()[1:]))
+    update.message.reply_text(bank_service.send_money_account(
+        update.message.from_user.id,
+        *update.message.text.split()[1:])
+    )
 
 
 @requires_phone
 @logged
 def send_money_card(update: Update, context: CallbackContext):
-    if len(update.message.text.split()) != 5:
+    if len(update.message.text.split()) != 4:
         update.message.reply_text(
             "Use this command with three parameters: " "/send_money_card {your card id} {receiver card id} {amount}"
         )
         return
 
-    update.message.reply_text(bank_service.send_money(update.message.from_user.id, *update.message.text.split()[1:]))
+    update.message.reply_text(bank_service.send_money_card(
+        update.message.from_user.id,
+        *update.message.text.split()[1:])
+    )
 
 
+@requires_phone
+@logged
 def get_bank_statement_account(update: Update, context: CallbackContext):
     if len(update.message.text.split()) != 2:
         update.message.reply_text(
@@ -96,6 +104,8 @@ def get_bank_statement_account(update: Update, context: CallbackContext):
     )
 
 
+@requires_phone
+@logged
 def get_bank_statement_card(update: Update, context: CallbackContext):
     if len(update.message.text.split()) != 2:
         update.message.reply_text(

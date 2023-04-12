@@ -1,17 +1,27 @@
 from django.db import transaction
 from django.db.models import Q
+from django.core.exceptions import ObjectDoesNotExist
 
 from app.internal.models.user import User
-from app.internal.models.transaction import Transaction
 
 
-def create_user(user_info) -> None:
-    User.objects.get_or_create(
-        telegram_id=user_info.id,
-        first_name=user_info.first_name,
-        last_name=user_info.last_name,
-        username=f"@{user_info.username}",
-    )
+def create_user(telegram_id, first_name, last_name='', username='') -> (User, bool):
+    try:
+        return User.objects.get(telegram_id=telegram_id), False
+
+    except ObjectDoesNotExist:
+        return User.objects.create(
+            telegram_id=telegram_id,
+            first_name=first_name,
+            last_name=last_name,
+            username=username,
+        ), True
+
+
+def is_phone_set(telegram_id) -> bool:
+    user = User.objects.filter(telegram_id=telegram_id).values('phone_number').get()
+
+    return False if user['phone_number'] == '' else True
 
 
 def update_user_phone(telegram_id, phone_number) -> None:
@@ -36,44 +46,44 @@ def get_user_info(telegram_id=None, phone_number=None) -> dict:
 
 
 def add_friend(telegram_id, friend_username):
-    user = User.objects.select_for_update().filter(telegram_id=telegram_id).select_related("friends")
-    friend = User.objects.filter(username=friend_username)
+    user = User.objects.select_for_update().filter(telegram_id=telegram_id).prefetch_related("friends")
+    try:
+        friend = User.objects\
+            .filter(username=friend_username)\
+            .get()
+    except ObjectDoesNotExist:
+        return f"User @{friend_username} not found"
 
-    if not friend.exists():
-        return f"User {friend_username} not found"
+    with transaction.atomic():
+        if user.filter(friends__username=friend_username).exists():
+            return f"@{friend_username} already in friends"
 
-    if user.filter(friends__username=friend_username).exists():
-        return f"{friend_username} already in friends"
-
-    friend = friend.get()
-    user = user.get()
-
-    user.friends.add(friend)
-    user.save(update_fields=("friends",))
-    return f"{friend_username} added to friends"
+        user = user.get()
+        user.friends.add(friend)
+        return f"@{friend_username} added to friends"
 
 
 def remove_friend(telegram_id, friend_username):
-    user = User.objects.select_for_update().filter(telegram_id=telegram_id).select_related("friends")
-    friend = User.objects.filter(username=friend_username)
+    user = User.objects.select_for_update().filter(telegram_id=telegram_id)
+    try:
+        friend = User.objects\
+            .get(username=friend_username)
+    except ObjectDoesNotExist:
+        return f"User @{friend_username} not found"
 
-    if not friend.exists():
-        return f"User {friend_username} not found"
+    with transaction.atomic():
+        if not user.filter(friends__username=friend_username).exists():
+            return f"@{friend_username} already not in friends"
 
-    if not user.filter(friends__username=friend_username).exists():
-        return f"{friend_username} already not in friends"
-
-    friend = friend.get()
-    user = user.get()
-
-    user.friends.remove(friend)
-    user.save(update_fields=("friends",))
-    return f"{friend_username} removed from friends"
+        user = user.get()
+        user.friends.remove(friend)
+        user.save()
+        return f"@{friend_username} removed from friends"
 
 
 def list_friends(telegram_id):
-    user = User.objects.filter(telegram_id=telegram_id).values("friends__username")
-    return list(user["friends__username"])
+    friends = User.objects.filter(telegram_id=telegram_id).values("friends__username")
+    return list((f['friends__username'] for f in friends))
 
 
 def get_interactions(telegram_id):

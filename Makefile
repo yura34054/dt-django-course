@@ -18,9 +18,6 @@ collectstatic:
 dev:
 	python src/manage.py runserver localhost:8000
 
-bot:
-	python src/manage.py run_bot
-
 command:
 	python src/manage.py ${c}
 
@@ -32,6 +29,10 @@ debug:
 
 piplock:
 	pipenv install
+	sudo chown -R ${USER} Pipfile.lock
+
+piplock_dev:
+	pipenv install --dev
 	sudo chown -R ${USER} Pipfile.lock
 
 lint:

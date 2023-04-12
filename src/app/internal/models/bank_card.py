@@ -8,7 +8,7 @@ class BankCard(models.Model):
     card_id = models.AutoField(primary_key=True)
 
     def __str__(self):
-        return f"{self.bank_account.owner.telegram_id}: {self.id}"
+        return f"{self.bank_account.owner.telegram_id}: {self.card_id}"
 
     class Meta:
         verbose_name = "Bank card"

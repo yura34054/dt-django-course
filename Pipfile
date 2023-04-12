@@ -7,6 +7,7 @@ verify_ssl = true
 black = "~=23.1.0"
 isort = "~=5.10"
 flake8 = "~=4.0"
+pytest-django = "~=4.5.2"
 
 [packages]
 django = "~=4.0"

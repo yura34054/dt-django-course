@@ -7,7 +7,13 @@ from app.internal.services import user_service
 
 @logged
 def start(update: Update, context: CallbackContext):
-    user_service.create_user(update.message.from_user)
+    from_user = update.message.from_user
+    user_service.create_user(
+        from_user.id,
+        from_user.first_name,
+        from_user.last_name,
+        from_user.username,
+    )
     update.message.reply_text("Hi!")
 
 
@@ -73,7 +79,7 @@ def list_friends(update: Update, context: CallbackContext):
         update.message.reply_text("No friends found :(")
         return
 
-    update.message.reply_text("Your friends:\n" ", ".join(friends))
+    update.message.reply_text("Your friends:\n" + ", ".join(friends))
 
 
 def get_interactions(update: Update, context: CallbackContext):
