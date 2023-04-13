@@ -26,6 +26,7 @@ def logged(func):
             return func(update, context)
 
         except Exception as e:
+            update.message.reply_text("Something went wrong, please try again or contact support")
             logging.exception(e)
 
     return wrapper

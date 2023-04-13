@@ -21,7 +21,7 @@ env = environ.Env(
     TELEGRAM_TOKEN=(str, ""),
     WEBHOOK_MODE=(bool, True),
     TELEGRAM_SECRET_TOKEN=(str, ""),
-    URL=(str, ""),
+    DOMAIN=(str, ""),
     DROP_PENDING_UPDATES=(bool, False),
     ALLOWED_HOSTS=(str, "[]"),
     DB_NAME=(str, ""),
@@ -141,7 +141,8 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/4.0/howto/static-files/
 
-STATIC_URL = "static/"
+STATIC_ROOT = os.path.normpath(os.path.dirname(__file__)) + "/../static"
+STATIC_URL = "/static/"
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/4.0/ref/settings/#default-auto-field
@@ -155,10 +156,10 @@ AUTH_USER_MODEL = "app.AdminUser"
 TELEGRAM_BOT = {
     "bot_token": env("TELEGRAM_TOKEN"),
     "webhook_mode": env("WEBHOOK_MODE"),
-    "telegram_url": f'https://api.telegram.org/bot{env("TELEGRAM_TOKEN")}/',
-    "WEBHOOK_INFO": {
-        "secret_token": env("TELEGRAM_SECRET_TOKEN"),
-        "url": f'{env("URL")}/api/telegram_webhook/',
-        "drop_pending_updates": env("DROP_PENDING_UPDATES"),
-    },
+    "url_path": "/telegram-webhook/",
+    "webhook_url": f'{env("DOMAIN")}/api/telegram-webhook/',
+    "secret_token": env("TELEGRAM_SECRET_TOKEN"),
+    "drop_pending_updates": env("DROP_PENDING_UPDATES"),
 }
+
+CSRF_TRUSTED_ORIGINS = [env("DOMAIN")]
