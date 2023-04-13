@@ -68,9 +68,8 @@ def send_money_account(update: Update, context: CallbackContext):
         )
         return
 
-    update.message.reply_text(bank_service.send_money_account(
-        update.message.from_user.id,
-        *update.message.text.split()[1:])
+    update.message.reply_text(
+        bank_service.send_money_account(update.message.from_user.id, *update.message.text.split()[1:])
     )
 
 
@@ -83,9 +82,8 @@ def send_money_card(update: Update, context: CallbackContext):
         )
         return
 
-    update.message.reply_text(bank_service.send_money_card(
-        update.message.from_user.id,
-        *update.message.text.split()[1:])
+    update.message.reply_text(
+        bank_service.send_money_card(update.message.from_user.id, *update.message.text.split()[1:])
     )
 
 
@@ -93,14 +91,18 @@ def send_money_card(update: Update, context: CallbackContext):
 @logged
 def get_bank_statement_account(update: Update, context: CallbackContext):
     if len(update.message.text.split()) != 2:
-        update.message.reply_text(
-            "Use this command with one parameter: " "/get_bank_statement_account {account_name}"
-        )
+        update.message.reply_text("Use this command with one parameter: " "/get_bank_statement_account {account_name}")
         return
 
-    update.message.reply_text(bank_service.get_bank_statement_account(
-        update.message.from_user.id,
-        update.message.text.split()[1])
+    data = bank_service.get_bank_statement_account(update.message.from_user.id, update.message.text.split()[1])
+    if isinstance(data, str):
+        update.message.reply_text(data)
+        return
+    bank_statement, money = data
+
+    update.message.reply_text(
+        "\n".join(f"{st['time']}: {st['account_from']} -> {st['account_to']} | {st['amount']}" for st in bank_statement)
+        + f"\nYour balance: {money}"
     )
 
 
@@ -108,12 +110,16 @@ def get_bank_statement_account(update: Update, context: CallbackContext):
 @logged
 def get_bank_statement_card(update: Update, context: CallbackContext):
     if len(update.message.text.split()) != 2:
-        update.message.reply_text(
-            "Use this command with one parameter: " "/get_bank_statement_card {card_id}"
-        )
+        update.message.reply_text("Use this command with one parameter: " "/get_bank_statement_card {card_id}")
         return
 
-    update.message.reply_text(bank_service.get_bank_statement_card(
-        update.message.from_user.id,
-        update.message.text.split()[1])
+    data = bank_service.get_bank_statement_card(update.message.from_user.id, update.message.text.split()[1])
+    if isinstance(data, str):
+        update.message.reply_text(data)
+        return
+    bank_statement, money = data
+
+    update.message.reply_text(
+        "\n".join(f"{st['time']}: {st['card_from']} -> {st['card_to']} | {st['amount']}" for st in bank_statement)
+        + f"\nYour balance: {money}"
     )

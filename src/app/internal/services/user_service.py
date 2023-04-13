@@ -1,27 +1,30 @@
+from django.core.exceptions import ObjectDoesNotExist
 from django.db import transaction
 from django.db.models import Q
-from django.core.exceptions import ObjectDoesNotExist
 
 from app.internal.models.user import User
 
 
-def create_user(telegram_id, first_name, last_name='', username='') -> (User, bool):
+def create_user(telegram_id, first_name, last_name="", username="") -> (User, bool):
     try:
         return User.objects.get(telegram_id=telegram_id), False
 
     except ObjectDoesNotExist:
-        return User.objects.create(
-            telegram_id=telegram_id,
-            first_name=first_name,
-            last_name=last_name,
-            username=username,
-        ), True
+        return (
+            User.objects.create(
+                telegram_id=telegram_id,
+                first_name=first_name,
+                last_name=last_name,
+                username=username,
+            ),
+            True,
+        )
 
 
 def is_phone_set(telegram_id) -> bool:
-    user = User.objects.filter(telegram_id=telegram_id).values('phone_number').get()
+    user = User.objects.filter(telegram_id=telegram_id).values("phone_number").get()
 
-    return False if user['phone_number'] == '' else True
+    return False if user["phone_number"] == "" else True
 
 
 def update_user_phone(telegram_id, phone_number) -> None:
@@ -51,9 +54,7 @@ def get_user_info(telegram_id=None, phone_number=None) -> dict:
 def add_friend(telegram_id, friend_username):
     user = User.objects.select_for_update().filter(telegram_id=telegram_id).prefetch_related("friends")
     try:
-        friend = User.objects\
-            .filter(username=friend_username)\
-            .get()
+        friend = User.objects.filter(username=friend_username).get()
     except ObjectDoesNotExist:
         return f"User @{friend_username} not found"
 
@@ -69,8 +70,7 @@ def add_friend(telegram_id, friend_username):
 def remove_friend(telegram_id, friend_username):
     user = User.objects.select_for_update().filter(telegram_id=telegram_id)
     try:
-        friend = User.objects\
-            .get(username=friend_username)
+        friend = User.objects.get(username=friend_username)
     except ObjectDoesNotExist:
         return f"User @{friend_username} not found"
 
@@ -86,14 +86,14 @@ def remove_friend(telegram_id, friend_username):
 
 def list_friends(telegram_id):
     friends = User.objects.filter(telegram_id=telegram_id).values("friends__username")
-    return list((f['friends__username'] for f in friends))
+    return list((f["friends__username"] for f in friends))
 
 
 def get_interactions(telegram_id):
     users = User.objects.filter(
-        Q(bankaccount__transaction__account_from__owner__telegram_id=telegram_id) &
-        Q(bankaccount__transaction__account_to__owner__telegram_id=telegram_id) &
-        ~Q(telegram_id)
+        Q(bankaccount__transaction__account_from__owner__telegram_id=telegram_id)
+        & Q(bankaccount__transaction__account_to__owner__telegram_id=telegram_id)
+        & ~Q(telegram_id)
     ).distinct()
 
     return users

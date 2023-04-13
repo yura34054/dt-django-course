@@ -7,7 +7,6 @@ logging.basicConfig(level=logging.INFO)
 
 def requires_phone(func):
     def wrapper(update, context):
-
         if not user_service.is_phone_set(telegram_id=update.message.from_user.id):
             update.message.reply_text("To use this method you need to provide your phone (/set_phone)")
 

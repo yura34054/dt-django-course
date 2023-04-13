@@ -38,13 +38,14 @@ lint:
     name: test
 
 deploy.test:
-  stage: deploy.test
+  stage: deploy
   script:
     - make docker_pull docker_down docker_up docker_migrate
   tags:
     - job:deploy.test
   only:
     - dev
+    - master
   environment:
     name: test
   when: manual
