@@ -16,6 +16,7 @@ class User(models.Model):
             )
         ],
     )
+    friends = models.ManyToManyField("self", symmetrical=False, blank=True)
 
     def __str__(self):
         return f"{self.first_name} {self.last_name} ({self.telegram_id})"

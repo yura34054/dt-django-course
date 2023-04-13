@@ -2,7 +2,7 @@ from telegram import KeyboardButton, ReplyKeyboardMarkup, ReplyKeyboardRemove, U
 from telegram.ext import CallbackContext
 
 from app.internal.decorators.telegram_decorators import logged, requires_phone
-from app.internal.services import bank_account_service, bank_card_service, user_service
+from app.internal.services import user_service
 
 
 @logged
@@ -44,10 +44,35 @@ def me(update: Update, context: CallbackContext):
 
 @requires_phone
 @logged
-def bank_status(update: Update, context: CallbackContext):
-    info = bank_account_service.get_accounts_info(owner_id=update.message.from_user.id)
-    if len(info) == 0:
-        update.message.reply_text("No bank accounts found")
+def add_friend(update: Update, context: CallbackContext):
+    if len(update.message.text.split()) != 2:
+        update.message.reply_text("Use this command with one parameter: " "/add_friend {friend username}")
         return
 
-    update.message.reply_text("\n".join(info))
+    friend_username = update.message.text.split()[1]
+
+    update.message.reply_text(user_service.add_friend(update.message.from_user.id, friend_username))
+
+
+@requires_phone
+@logged
+def remove_friend(update: Update, context: CallbackContext):
+    if len(update.message.text.split()) != 2:
+        update.message.reply_text("Use this command with one parameter: " "/remove_friend {friend username}")
+        return
+
+    friend_username = update.message.text.split()[1]
+
+    update.message.reply_text(user_service.remove_friend(update.message.from_user.id, friend_username))
+
+
+@requires_phone
+@logged
+def list_friends(update: Update, context: CallbackContext):
+    friends = user_service.list_friends(update.message.from_user.id)
+
+    if len(friends) == 0:
+        update.message.reply_text("No friends found :(")
+        return
+
+    update.message.reply_text("Your friends:\n" ", ".join(friends))

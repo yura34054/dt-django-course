@@ -46,18 +46,21 @@ check_lint:
 
 docker_build:
 	docker build -t ${IMAGE_APP} .
+	docker build -t ${IMAGE_NGINX} ./nginx
 
 docker_push:
 	docker push ${IMAGE_APP}
+	docker push ${IMAGE_NGINX}
 
 docker_pull:
 	docker pull ${IMAGE_APP}
+	docker pull ${IMAGE_NGINX}
 
 docker_up:
-	docker-compose --compatibility up -d
+	docker-compose up -d
 
 docker_migrate:
-	docker exec dt-django-homework_web_1 python manage.py migrate
+	docker exec ${CONTAINER_NAME} python manage.py migrate
 
 docker_down:
 	docker-compose down
