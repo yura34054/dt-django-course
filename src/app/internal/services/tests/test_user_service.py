@@ -35,7 +35,7 @@ def test_user_phone():
 def test_get_user_info():
     user_service.create_user(1, 'first_name', 'last_name', 'username')
     user_service.update_user_phone(1, '71234567890')
-    assert user_service.get_user_info(1) == {
+    assert user_service.get_user_info(telegram_id=1) == {
         "first_name": 'first_name',
         "last_name": 'last_name',
         "username": 'username',

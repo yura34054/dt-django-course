@@ -34,7 +34,7 @@ def create_card(telegram_id, bank_account_name):
         bank_account=bank_account.get(),
     )
 
-    return f'Card "{card.card_id}" successfully created'
+    return card.card_id, f'Card "{card.card_id}" successfully created'
 
 
 def get_account_info(telegram_id, name) -> dict:
@@ -74,12 +74,12 @@ def send_money(account_from, account_to, amount):
 
 
 def send_money_account(owner_id, receiver_username, account_name, receiver_account_name, amount):
-    if not User.objects.filter(Q(telegram_id=owner_id) & Q(friends__username=receiver_username)).exists:
-        return f"You need to add {receiver_username} to your friend list first by using /add_friend"
+    if not User.objects.filter(telegram_id=owner_id, friends__username=receiver_username).exists():
+        return f"You need to add @{receiver_username} to your friend list first by using /add_friend"
 
     amount = round(float(amount), 2)
     if amount < 0:
-        amount = 0
+        amount = 0.0
 
     with transaction.atomic():
 
@@ -89,7 +89,7 @@ def send_money_account(owner_id, receiver_username, account_name, receiver_accou
                 .filter(Q(owner__telegram_id=owner_id) & Q(name=account_name))\
                 .get()
         except ObjectDoesNotExist:
-            return f"Account {account_name} not found"
+            return f"Account \"{account_name}\" not found"
 
         if account_from.money < amount:
             return "Not enough money"
@@ -100,7 +100,7 @@ def send_money_account(owner_id, receiver_username, account_name, receiver_accou
                 .filter(Q(owner__username=receiver_username) & Q(name=receiver_account_name))\
                 .get()
         except ObjectDoesNotExist:
-            return f"Receiver account {receiver_account_name} not found"
+            return f"Receiver account \"{receiver_account_name}\" not found"
 
         send_money(account_from, account_to, amount)
         Transaction.objects.create(amount=amount, account_from=account_from, account_to=account_to)
@@ -112,7 +112,7 @@ def send_money_card(owner_id, card_id, receiver_card_id, amount):
 
     amount = round(float(amount), 2)
     if amount < 0:
-        amount = 0
+        amount = 0.0
 
     with transaction.atomic():
 
@@ -123,10 +123,10 @@ def send_money_card(owner_id, card_id, receiver_card_id, amount):
                 .select_related("bank_account__owner")\
                 .get()
         except ObjectDoesNotExist:
-            return f"Card {card_id} not found"
+            return f"Card \"{card_id}\" not found"
 
         if card_from.bank_account.owner.telegram_id != owner_id:
-            return f"You don't own card {card_id}"
+            return f"You don't own card \"{card_id}\""
 
         try:
             card_to = BankCard.objects\
@@ -135,10 +135,10 @@ def send_money_card(owner_id, card_id, receiver_card_id, amount):
                 .select_related("bank_account__owner")\
                 .get()
         except ObjectDoesNotExist:
-            return f"Receiver card {receiver_card_id} not found"
+            return f"Receiver card \"{receiver_card_id}\" not found"
 
-        if not User.objects.filter(Q(telegram_id=owner_id) & Q(friends=card_to.bank_account.owner)).exists:
-            return f"You need to add owner of {receiver_card_id} to your friend list first by using /add_friend"
+        if not User.objects.filter(telegram_id=owner_id, friends=card_to.bank_account.owner).exists():
+            return f"You need to add owner of \"{receiver_card_id}\" to your friend list first by using /add_friend"
 
         send_money(card_from.bank_account, card_to.bank_account, amount)
 
@@ -163,7 +163,7 @@ def get_bank_statement_account(telegram_id, account_name):
 
     transactions = Transaction.objects\
         .filter(account_from=account)\
-        .values("account_from__name", "account_to__name", "amount")
+        .values("account_from__name", "account_to__name", "amount")[-100:]
 
     if not transactions:
         return f"No transactions for account {account_name} found"
@@ -179,7 +179,7 @@ def get_bank_statement_card(telegram_id, card_id):
         card = BankAccount.objects\
             .filter(Q(bank_account__owner__telegram_id=telegram_id) & Q(card_id=card_id))\
             .select_related("bank_account__owner", "bank_account__money")\
-            .get()
+            .get()[-100:]
     except ObjectDoesNotExist:
         return f"Card {card_id} not found"
 

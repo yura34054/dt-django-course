@@ -41,7 +41,7 @@ def update_user_phone(update: Update, context: CallbackContext):
 @requires_phone
 @logged
 def me(update: Update, context: CallbackContext):
-    user_info = user_service.get_user_info(update.message.from_user.id)
+    user_info = user_service.get_user_info(telegram_id=update.message.from_user.id)
 
     update.message.reply_text("\n".join((f"{param}: {value}" for param, value in user_info.items())))
 

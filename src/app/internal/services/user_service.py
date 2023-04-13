@@ -33,7 +33,10 @@ def update_user_phone(telegram_id, phone_number) -> None:
 def get_user_info(telegram_id=None, phone_number=None) -> dict:
     """return info about user"""
 
-    user = User.objects.filter(Q(telegram_id=telegram_id) | Q(phone_number=phone_number)).get()
+    try:
+        user = User.objects.filter(Q(telegram_id=telegram_id) | Q(phone_number=phone_number)).get()
+    except ObjectDoesNotExist:
+        return {}
 
     user_info = {
         "first_name": user.first_name,
