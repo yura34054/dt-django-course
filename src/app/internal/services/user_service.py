@@ -24,7 +24,7 @@ def create_user(telegram_id, first_name, last_name="", username="") -> (User, bo
 def is_phone_set(telegram_id) -> bool:
     user = User.objects.filter(telegram_id=telegram_id).values("phone_number").get()
 
-    return False if user["phone_number"] == "" else True
+    return not user["phone_number"] == ""
 
 
 def update_user_phone(telegram_id, phone_number) -> None:

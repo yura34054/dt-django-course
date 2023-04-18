@@ -3,6 +3,7 @@ from telegram.ext import CallbackContext
 
 from app.internal.decorators.telegram_decorators import logged, requires_phone
 from app.internal.services import bank_service
+from app.internal.exceptions.validation_error import ValidationError
 
 
 @requires_phone
@@ -43,7 +44,12 @@ def add_account(update: Update, context: CallbackContext):
 
     name = update.message.text.split()[1]
 
-    update.message.reply_text(bank_service.create_account(update.message.from_user.id, name))
+    try:
+        bank_service.create_account(update.message.from_user.id, name)
+        update.message.reply_text(f'Account "{name}" successfully created')
+
+    except ValidationError as e:
+        update.message.reply_text(str(e))
 
 
 @requires_phone
@@ -55,7 +61,12 @@ def add_card(update: Update, context: CallbackContext):
 
     bank_account_name = update.message.text.split()[1]
 
-    update.message.reply_text(bank_service.create_card(update.message.from_user.id, bank_account_name))
+    try:
+        card_id = bank_service.create_card(update.message.from_user.id, bank_account_name)
+        update.message.reply_text(f'Card "{card_id}" successfully created')
+
+    except ValidationError as e:
+        update.message.reply_text(str(e))
 
 
 @requires_phone
@@ -68,9 +79,16 @@ def send_money_account(update: Update, context: CallbackContext):
         )
         return
 
-    update.message.reply_text(
-        bank_service.send_money_account(update.message.from_user.id, *update.message.text.split()[1:])
-    )
+    receiver_username, account_name, receiver_account_name, amount = update.message.text.split()[1:]
+
+    try:
+        amount = bank_service.send_money_account(
+            update.message.from_user.id, receiver_username, account_name, receiver_account_name, amount
+        )
+        update.message.reply_text(f"Successfully sent {amount} to @{receiver_username}")
+
+    except ValidationError as e:
+        update.message.reply_text(str(e))
 
 
 @requires_phone
@@ -82,44 +100,61 @@ def send_money_card(update: Update, context: CallbackContext):
         )
         return
 
-    update.message.reply_text(
-        bank_service.send_money_card(update.message.from_user.id, *update.message.text.split()[1:])
-    )
+    card_id, receiver_card_id, amount = update.message.text.split()[1:]
+
+    try:
+        amount = bank_service.send_money_card(
+            update.message.from_user.id, card_id, receiver_card_id, amount
+        )
+        update.message.reply_text(f'Successfully sent {amount} to card "{receiver_card_id}"')
+
+    except ValidationError as e:
+        update.message.reply_text(str(e))
 
 
 @requires_phone
 @logged
 def get_bank_statement_account(update: Update, context: CallbackContext):
     if len(update.message.text.split()) != 2:
-        update.message.reply_text("Use this command with one parameter: " "/get_bank_statement_account {account_name}")
+        update.message.reply_text("Use this command with one parameter: /get_bank_statement_account {account_name}")
         return
 
-    data = bank_service.get_bank_statement_account(update.message.from_user.id, update.message.text.split()[1])
-    if isinstance(data, str):
-        update.message.reply_text(data)
-        return
-    bank_statement, money = data
+    account_name = update.message.text.split()[1]
 
-    update.message.reply_text(
-        "\n".join(f"{st['time']}: {st['account_from']} -> {st['account_to']} | {st['amount']}" for st in bank_statement)
-        + f"\nYour balance: {money}"
-    )
+    try:
+        bank_statement, money = bank_service.get_bank_statement_account(update.message.from_user.id, account_name)
+        if not bank_statement:
+            update.message.reply_text(f"No transactions for account {account_name} found" + f"\nYour balance: {money}")
+
+        update.message.reply_text(
+            "\n".join(
+                f"{st['time']}: {st['account_from']} -> {st['account_to']} | {st['amount']}" for st in bank_statement)
+            + f"\nYour balance: {money}"
+        )
+
+    except ValidationError as e:
+        update.message.reply_text(str(e))
 
 
 @requires_phone
 @logged
 def get_bank_statement_card(update: Update, context: CallbackContext):
     if len(update.message.text.split()) != 2:
-        update.message.reply_text("Use this command with one parameter: " "/get_bank_statement_card {card_id}")
+        update.message.reply_text("Use this command with one parameter: /get_bank_statement_card {card_id}")
         return
 
-    data = bank_service.get_bank_statement_card(update.message.from_user.id, update.message.text.split()[1])
-    if isinstance(data, str):
-        update.message.reply_text(data)
-        return
-    bank_statement, money = data
+    card_id = update.message.text.split()[1]
 
-    update.message.reply_text(
-        "\n".join(f"{st['time']}: {st['card_from']} -> {st['card_to']} | {st['amount']}" for st in bank_statement)
-        + f"\nYour balance: {money}"
-    )
+    try:
+        bank_statement, money = bank_service.get_bank_statement_card(update.message.from_user.id, card_id)
+        if not bank_statement:
+            update.message.reply_text(f"No transactions for card \"{card_id}\" found" + f"\nYour balance: {money}")
+
+        update.message.reply_text(
+            "\n".join(
+                f"{st['time']}: {st['account_from']} -> {st['account_to']} | {st['amount']}" for st in bank_statement)
+            + f"\nYour balance: {money}"
+        )
+
+    except ValidationError as e:
+        update.message.reply_text(str(e))

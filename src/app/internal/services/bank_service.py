@@ -3,10 +3,11 @@ from django.db import transaction
 from django.db.models import F, Q
 
 from app.internal.models import BankAccount, BankCard, Transaction, User
+from app.internal.exceptions.validation_error import ValidationError
 
 
-def create_account(telegram_id, name):
-    """create new BankAccount object if name isn't taken, else return reply message"""
+def create_account(telegram_id: (str | int), name: str):
+    """create new BankAccount object if name isn't taken"""
 
     owner = User.objects.get(telegram_id=telegram_id)
 
@@ -17,27 +18,25 @@ def create_account(telegram_id, name):
     )
 
     if not created:
-        return f'Account "{name}" already exists'
-
-    return f'Account "{name}" successfully created'
+        raise ValidationError(f'Account "{name}" already exists')
 
 
-def create_card(telegram_id, bank_account_name):
-    """create new BankCard object"""
+def create_card(telegram_id: (str | int), bank_account_name: str) -> int:
+    """create new BankCard object, return card's id on success"""
 
     bank_account = BankAccount.objects.filter(Q(owner__telegram_id=telegram_id) & Q(name=bank_account_name))
 
     if not bank_account.exists():
-        return f'No account "{bank_account_name}" found'
+        raise ValidationError(f'No account "{bank_account_name}" found')
 
     card = BankCard.objects.create(
         bank_account=bank_account.get(),
     )
 
-    return card.card_id, f'Card "{card.card_id}" successfully created'
+    return card.card_id
 
 
-def get_account_info(telegram_id, name) -> dict:
+def get_account_info(telegram_id: (str | int), name: str) -> dict:
     """return info about account if it exists, else empty dict"""
 
     try:
@@ -54,7 +53,7 @@ def get_account_info(telegram_id, name) -> dict:
     return info
 
 
-def get_accounts(telegram_id):
+def get_accounts(telegram_id: (str | int)):
     """return info about all accounts associated with user"""
 
     return {
@@ -63,7 +62,7 @@ def get_accounts(telegram_id):
     }
 
 
-def send_money(account_from, account_to, amount):
+def __send_money(account_from: BankAccount, account_to: BankAccount, amount: float):
     account_from.money = F("money") - amount
     account_to.money = F("money") + amount
 
@@ -71,9 +70,12 @@ def send_money(account_from, account_to, amount):
     account_to.save(update_fields=("money",))
 
 
-def send_money_account(owner_id, receiver_username, account_name, receiver_account_name, amount):
+def send_money_account(owner_id: (str | int), receiver_username: str, account_name: str, receiver_account_name: str,
+                       amount: (str | int | float)) -> int:
+    """Transfer money from one account to the other if all conditions met, returns amount on success"""
+
     if not User.objects.filter(telegram_id=owner_id, friends__username=receiver_username).exists():
-        return f"You need to add @{receiver_username} to your friend list first by using /add_friend"
+        raise ValidationError(f"You need to add @{receiver_username} to your friend list first by using /add_friend")
 
     amount = round(float(amount), 2)
     if amount < 0:
@@ -87,10 +89,10 @@ def send_money_account(owner_id, receiver_username, account_name, receiver_accou
                 .get()
             )
         except ObjectDoesNotExist:
-            return f'Account "{account_name}" not found'
+            raise ValidationError(f'Account "{account_name}" not found')
 
         if account_from.money < amount:
-            return "Not enough money"
+            raise ValidationError("Not enough money")
 
         try:
             account_to = (
@@ -99,15 +101,17 @@ def send_money_account(owner_id, receiver_username, account_name, receiver_accou
                 .get()
             )
         except ObjectDoesNotExist:
-            return f'Receiver account "{receiver_account_name}" not found'
+            raise ValidationError(f'Receiver account "{receiver_account_name}" not found')
 
-        send_money(account_from, account_to, amount)
+        __send_money(account_from, account_to, amount)
         Transaction.objects.create(amount=amount, account_from=account_from, account_to=account_to)
+        return amount
 
-    return f"Successfully sent {amount} to @{receiver_username}"
 
+def send_money_card(owner_id: int, card_id: (str | int), receiver_card_id: (str | int),
+                    amount: (str | int | float)) -> int:
+    """Transfer money from one account to the other if all conditions met, return amount on success"""
 
-def send_money_card(owner_id, card_id, receiver_card_id, amount):
     amount = round(float(amount), 2)
     if amount < 0:
         amount = 0.0
@@ -118,10 +122,10 @@ def send_money_card(owner_id, card_id, receiver_card_id, amount):
                 BankCard.objects.select_for_update().filter(card_id=card_id).select_related("bank_account__owner").get()
             )
         except ObjectDoesNotExist:
-            return f'Card "{card_id}" not found'
+            raise ValidationError(f'Card "{card_id}" not found')
 
         if card_from.bank_account.owner.telegram_id != owner_id:
-            return f'You don\'t own card "{card_id}"'
+            raise ValidationError(f'You don\'t own card "{card_id}"')
 
         try:
             card_to = (
@@ -131,12 +135,14 @@ def send_money_card(owner_id, card_id, receiver_card_id, amount):
                 .get()
             )
         except ObjectDoesNotExist:
-            return f'Receiver card "{receiver_card_id}" not found'
+            raise ValidationError(f'Receiver card "{receiver_card_id}" not found')
 
         if not User.objects.filter(telegram_id=owner_id, friends=card_to.bank_account.owner).exists():
-            return f'You need to add owner of "{receiver_card_id}" to your friend list first by using /add_friend'
+            raise ValidationError(
+                f'You need to add owner of "{receiver_card_id}" to your friend list first by using /add_friend'
+            )
 
-        send_money(card_from.bank_account, card_to.bank_account, amount)
+        __send_money(card_from.bank_account, card_to.bank_account, amount)
 
         Transaction.objects.create(
             amount=amount,
@@ -146,21 +152,20 @@ def send_money_card(owner_id, card_id, receiver_card_id, amount):
             account_to=card_to.bank_account,
         )
 
-    return f'Successfully sent {amount} to card "{receiver_card_id}"'
+    return amount
 
 
-def get_bank_statement_account(telegram_id, account_name):
+def get_bank_statement_account(telegram_id: (str | int), account_name: str) -> (dict, int):
+    """Get all transactions for account"""
+
     try:
         account = BankAccount.objects.filter(owner__telegram_id=telegram_id, name=account_name).get()
     except ObjectDoesNotExist:
-        return f"Account {account_name} not found"
+        raise ValidationError(f"Account {account_name} not found")
 
     transactions = Transaction.objects.filter(account_from=account).values(
         "account_from__name", "account_to__name", "amount", "time"
     )
-
-    if not transactions:
-        return f"No transactions for account {account_name} found"
 
     return [
         {
@@ -173,7 +178,9 @@ def get_bank_statement_account(telegram_id, account_name):
     ], round(float(account.money), 2)
 
 
-def get_bank_statement_card(telegram_id, card_id):
+def get_bank_statement_card(telegram_id: (str | int), card_id: (str | int)) -> (dict, int):
+    """Get all transactions for card"""
+    
     try:
         card = (
             BankCard.objects.filter(bank_account__owner__telegram_id=telegram_id, card_id=card_id)
@@ -181,17 +188,14 @@ def get_bank_statement_card(telegram_id, card_id):
             .get()
         )
     except ObjectDoesNotExist:
-        return f"Card {card_id} not found"
+        raise ValidationError(f"Card {card_id} not found")
 
     if card.bank_account.owner.telegram_id != telegram_id:
-        return f"You don't own card {card_id}"
+        raise ValidationError(f"You don't own card {card_id}")
 
     transactions = Transaction.objects.filter(card_from=card).values(
         "card_from__card_id", "card_to__card_id", "amount", "time"
     )
-
-    if not transactions:
-        return f"No transactions for card {card_id} found"
 
     return [
         {

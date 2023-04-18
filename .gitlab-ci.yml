@@ -1,7 +1,7 @@
 image: docker/compose:alpine-1.28.0
 
 stages:
-  - lint
+  - test
   - build
   - deploy.test
   - deploy
@@ -11,26 +11,27 @@ before_script:
   - docker login -u ${CI_REGISTRY_USER} -p ${CI_REGISTRY_PASSWORD} ${CI_REGISTRY}
   - cp $DOT_ENV $(pwd)/.env
 
-build:
-  stage: build
+test:
+  stage: test
   script:
-    - make docker_build docker_push
+    - apk add --no-cache python3 py3-pip
+    - pip install pipenv
+    - make piplock_dev check_lint
+    - pytest src
   tags:
-    - job:build
+    - job:test
   only:
     - master
     - dev
   environment:
     name: test
 
-lint:
-  stage: lint
+build:
+  stage: build
   script:
-    - apk add --no-cache python3 py3-pip
-    - pip install isort flake8 black
-    - make check_lint
+    - make docker_build docker_push
   tags:
-    - job:test
+    - job:build
   only:
     - master
     - dev
