@@ -2,8 +2,8 @@ from django.core.exceptions import ObjectDoesNotExist
 from django.db import transaction
 from django.db.models import F, Q
 
+from app.internal.exceptions import ValidationError
 from app.internal.models import BankAccount, BankCard, Transaction, User
-from app.internal.exceptions.validation_error import ValidationError
 
 
 def create_account(telegram_id: (str | int), name: str):
@@ -70,8 +70,13 @@ def __send_money(account_from: BankAccount, account_to: BankAccount, amount: flo
     account_to.save(update_fields=("money",))
 
 
-def send_money_account(owner_id: (str | int), receiver_username: str, account_name: str, receiver_account_name: str,
-                       amount: (str | int | float)) -> int:
+def send_money_account(
+    owner_id: (str | int),
+    receiver_username: str,
+    account_name: str,
+    receiver_account_name: str,
+    amount: (str | int | float),
+) -> int:
     """Transfer money from one account to the other if all conditions met, returns amount on success"""
 
     if not User.objects.filter(telegram_id=owner_id, friends__username=receiver_username).exists():
@@ -108,8 +113,9 @@ def send_money_account(owner_id: (str | int), receiver_username: str, account_na
         return amount
 
 
-def send_money_card(owner_id: int, card_id: (str | int), receiver_card_id: (str | int),
-                    amount: (str | int | float)) -> int:
+def send_money_card(
+    owner_id: int, card_id: (str | int), receiver_card_id: (str | int), amount: (str | int | float)
+) -> int:
     """Transfer money from one account to the other if all conditions met, return amount on success"""
 
     amount = round(float(amount), 2)
@@ -119,13 +125,16 @@ def send_money_card(owner_id: int, card_id: (str | int), receiver_card_id: (str 
     with transaction.atomic():
         try:
             card_from = (
-                BankCard.objects.select_for_update().filter(card_id=card_id).select_related("bank_account__owner").get()
+                BankCard.objects.select_for_update().filter(card_id=card_id).select_related("bank_account").get()
             )
         except ObjectDoesNotExist:
             raise ValidationError(f'Card "{card_id}" not found')
 
         if card_from.bank_account.owner.telegram_id != owner_id:
             raise ValidationError(f'You don\'t own card "{card_id}"')
+
+        if card_from.bank_account.money < amount:
+            raise ValidationError("Not enough money")
 
         try:
             card_to = (
@@ -180,7 +189,7 @@ def get_bank_statement_account(telegram_id: (str | int), account_name: str) -> (
 
 def get_bank_statement_card(telegram_id: (str | int), card_id: (str | int)) -> (dict, int):
     """Get all transactions for card"""
-    
+
     try:
         card = (
             BankCard.objects.filter(bank_account__owner__telegram_id=telegram_id, card_id=card_id)

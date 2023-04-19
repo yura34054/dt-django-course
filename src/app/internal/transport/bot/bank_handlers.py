@@ -2,8 +2,8 @@ from telegram import Update
 from telegram.ext import CallbackContext
 
 from app.internal.decorators.telegram_decorators import logged, requires_phone
+from app.internal.exceptions import ValidationError
 from app.internal.services import bank_service
-from app.internal.exceptions.validation_error import ValidationError
 
 
 @requires_phone
@@ -103,9 +103,7 @@ def send_money_card(update: Update, context: CallbackContext):
     card_id, receiver_card_id, amount = update.message.text.split()[1:]
 
     try:
-        amount = bank_service.send_money_card(
-            update.message.from_user.id, card_id, receiver_card_id, amount
-        )
+        amount = bank_service.send_money_card(update.message.from_user.id, card_id, receiver_card_id, amount)
         update.message.reply_text(f'Successfully sent {amount} to card "{receiver_card_id}"')
 
     except ValidationError as e:
@@ -128,7 +126,8 @@ def get_bank_statement_account(update: Update, context: CallbackContext):
 
         update.message.reply_text(
             "\n".join(
-                f"{st['time']}: {st['account_from']} -> {st['account_to']} | {st['amount']}" for st in bank_statement)
+                f"{st['time']}: {st['account_from']} -> {st['account_to']} | {st['amount']}" for st in bank_statement
+            )
             + f"\nYour balance: {money}"
         )
 
@@ -148,11 +147,12 @@ def get_bank_statement_card(update: Update, context: CallbackContext):
     try:
         bank_statement, money = bank_service.get_bank_statement_card(update.message.from_user.id, card_id)
         if not bank_statement:
-            update.message.reply_text(f"No transactions for card \"{card_id}\" found" + f"\nYour balance: {money}")
+            update.message.reply_text(f'No transactions for card "{card_id}" found' + f"\nYour balance: {money}")
 
         update.message.reply_text(
             "\n".join(
-                f"{st['time']}: {st['account_from']} -> {st['account_to']} | {st['amount']}" for st in bank_statement)
+                f"{st['time']}: {st['account_from']} -> {st['account_to']} | {st['amount']}" for st in bank_statement
+            )
             + f"\nYour balance: {money}"
         )
 

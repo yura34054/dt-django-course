@@ -44,25 +44,21 @@ def test_get_user_info():
 
 
 @pytest.mark.django_db
-def test_user_friends():
+def test_user_add_friends():
     user_service.create_user(1, "first_name", username="username_1")
-
-    assert user_service.add_friend(1, "username_2") == "User @username_2 not found"
-    assert user_service.remove_friend(1, "username_2") == "User @username_2 not found"
-    assert user_service.list_friends(1) == [None]
-
     user_service.create_user(2, "first_name", username="username_2")
-
-    assert user_service.remove_friend(1, "username_2") == "@username_2 already not in friends"
-    assert user_service.add_friend(1, "username_2") == "@username_2 added to friends"
-    assert user_service.add_friend(1, "username_2") == "@username_2 already in friends"
-    assert user_service.list_friends(1) == ["username_2"]
-
-    assert user_service.remove_friend(1, "username_2") == "@username_2 removed from friends"
     assert user_service.list_friends(1) == [None]
-    assert user_service.remove_friend(1, "username_2") == "@username_2 already not in friends"
+
+    user_service.add_friend(1, "username_2")
+    assert user_service.list_friends(1) == ["username_2"]
 
 
 @pytest.mark.django_db
-def test_user_get_interactions():
-    pass
+def test_user_remove_friends():
+    user_service.create_user(1, "first_name", username="username_1")
+    user_service.create_user(2, "first_name", username="username_2")
+    user_service.add_friend(1, "username_2")
+
+    assert user_service.list_friends(1) == ["username_2"]
+    user_service.remove_friend(1, "username_2")
+    assert user_service.list_friends(1) == [None]

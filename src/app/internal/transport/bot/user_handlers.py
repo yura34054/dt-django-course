@@ -2,6 +2,7 @@ from telegram import KeyboardButton, ReplyKeyboardMarkup, ReplyKeyboardRemove, U
 from telegram.ext import CallbackContext
 
 from app.internal.decorators.telegram_decorators import logged, requires_phone
+from app.internal.exceptions import ValidationError
 from app.internal.services import user_service
 
 
@@ -55,7 +56,12 @@ def add_friend(update: Update, context: CallbackContext):
 
     friend_username = update.message.text.split()[1]
 
-    update.message.reply_text(user_service.add_friend(update.message.from_user.id, friend_username))
+    try:
+        user_service.add_friend(update.message.from_user.id, friend_username)
+        update.message.reply_text(f"@{friend_username} added to friends")
+
+    except ValidationError as e:
+        update.message.reply_text(str(e))
 
 
 @requires_phone
@@ -67,7 +73,12 @@ def remove_friend(update: Update, context: CallbackContext):
 
     friend_username = update.message.text.split()[1]
 
-    update.message.reply_text(user_service.remove_friend(update.message.from_user.id, friend_username))
+    try:
+        user_service.remove_friend(update.message.from_user.id, friend_username)
+        update.message.reply_text(f"@{friend_username} removed from friends")
+
+    except ValidationError as e:
+        update.message.reply_text(str(e))
 
 
 @requires_phone
@@ -82,5 +93,7 @@ def list_friends(update: Update, context: CallbackContext):
     update.message.reply_text("Your friends:\n" + ", ".join(friends))
 
 
+@requires_phone
+@logged
 def get_interactions(update: Update, context: CallbackContext):
-    update.message.reply_text(user_service.get_interactions(update.message.from_user.id))
+    update.message.reply_text(", ".join(user_service.get_interactions(update.message.from_user.id)))
