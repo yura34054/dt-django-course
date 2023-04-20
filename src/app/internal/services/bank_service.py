@@ -2,7 +2,15 @@ from django.core.exceptions import ObjectDoesNotExist
 from django.db import transaction
 from django.db.models import F, Q
 
-from app.internal.exceptions import ValidationError
+from app.internal.exceptions import (
+    AccountAlreadyExistsError,
+    AccountNotFoundError,
+    CardNotFoundError,
+    CardPermissionError,
+    NegativeMoneyAmountError,
+    NotEnoughMoneyError,
+    NotInFriendsError,
+)
 from app.internal.models import BankAccount, BankCard, Transaction, User
 
 
@@ -18,7 +26,7 @@ def create_account(telegram_id: (str | int), name: str):
     )
 
     if not created:
-        raise ValidationError(f'Account "{name}" already exists')
+        raise AccountAlreadyExistsError(name)
 
 
 def create_card(telegram_id: (str | int), bank_account_name: str) -> int:
@@ -27,7 +35,7 @@ def create_card(telegram_id: (str | int), bank_account_name: str) -> int:
     bank_account = BankAccount.objects.filter(Q(owner__telegram_id=telegram_id) & Q(name=bank_account_name))
 
     if not bank_account.exists():
-        raise ValidationError(f'No account "{bank_account_name}" found')
+        raise AccountNotFoundError(bank_account_name)
 
     card = BankCard.objects.create(
         bank_account=bank_account.get(),
@@ -76,15 +84,15 @@ def send_money_account(
     account_name: str,
     receiver_account_name: str,
     amount: (str | int | float),
-) -> int:
+) -> float:
     """Transfer money from one account to the other if all conditions met, returns amount on success"""
-
-    if not User.objects.filter(telegram_id=owner_id, friends__username=receiver_username).exists():
-        raise ValidationError(f"You need to add @{receiver_username} to your friend list first by using /add_friend")
 
     amount = round(float(amount), 2)
     if amount < 0:
-        amount = 0.0
+        raise NegativeMoneyAmountError
+
+    if not User.objects.filter(telegram_id=owner_id, friends__username=receiver_username).exists():
+        raise NotInFriendsError(receiver_username)
 
     with transaction.atomic():
         try:
@@ -94,10 +102,10 @@ def send_money_account(
                 .get()
             )
         except ObjectDoesNotExist:
-            raise ValidationError(f'Account "{account_name}" not found')
+            raise AccountNotFoundError(account_name)
 
         if account_from.money < amount:
-            raise ValidationError("Not enough money")
+            raise NotEnoughMoneyError
 
         try:
             account_to = (
@@ -106,7 +114,7 @@ def send_money_account(
                 .get()
             )
         except ObjectDoesNotExist:
-            raise ValidationError(f'Receiver account "{receiver_account_name}" not found')
+            raise AccountNotFoundError(receiver_account_name)
 
         __send_money(account_from, account_to, amount)
         Transaction.objects.create(amount=amount, account_from=account_from, account_to=account_to)
@@ -115,12 +123,12 @@ def send_money_account(
 
 def send_money_card(
     owner_id: int, card_id: (str | int), receiver_card_id: (str | int), amount: (str | int | float)
-) -> int:
+) -> float:
     """Transfer money from one account to the other if all conditions met, return amount on success"""
 
     amount = round(float(amount), 2)
     if amount < 0:
-        amount = 0.0
+        raise NegativeMoneyAmountError
 
     with transaction.atomic():
         try:
@@ -128,13 +136,13 @@ def send_money_card(
                 BankCard.objects.select_for_update().filter(card_id=card_id).select_related("bank_account").get()
             )
         except ObjectDoesNotExist:
-            raise ValidationError(f'Card "{card_id}" not found')
+            raise CardNotFoundError(card_id)
 
         if card_from.bank_account.owner.telegram_id != owner_id:
-            raise ValidationError(f'You don\'t own card "{card_id}"')
+            raise CardPermissionError(card_id)
 
         if card_from.bank_account.money < amount:
-            raise ValidationError("Not enough money")
+            raise NotEnoughMoneyError
 
         try:
             card_to = (
@@ -144,12 +152,10 @@ def send_money_card(
                 .get()
             )
         except ObjectDoesNotExist:
-            raise ValidationError(f'Receiver card "{receiver_card_id}" not found')
+            raise CardNotFoundError(receiver_card_id)
 
         if not User.objects.filter(telegram_id=owner_id, friends=card_to.bank_account.owner).exists():
-            raise ValidationError(
-                f'You need to add owner of "{receiver_card_id}" to your friend list first by using /add_friend'
-            )
+            raise NotInFriendsError(card_to.bank_account.owner.username)
 
         __send_money(card_from.bank_account, card_to.bank_account, amount)
 
@@ -170,7 +176,7 @@ def get_bank_statement_account(telegram_id: (str | int), account_name: str) -> (
     try:
         account = BankAccount.objects.filter(owner__telegram_id=telegram_id, name=account_name).get()
     except ObjectDoesNotExist:
-        raise ValidationError(f"Account {account_name} not found")
+        raise AccountNotFoundError(account_name)
 
     transactions = Transaction.objects.filter(account_from=account).values(
         "account_from__name", "account_to__name", "amount", "time"
@@ -197,10 +203,10 @@ def get_bank_statement_card(telegram_id: (str | int), card_id: (str | int)) -> (
             .get()
         )
     except ObjectDoesNotExist:
-        raise ValidationError(f"Card {card_id} not found")
+        raise CardNotFoundError(card_id)
 
     if card.bank_account.owner.telegram_id != telegram_id:
-        raise ValidationError(f"You don't own card {card_id}")
+        raise CardPermissionError(card_id)
 
     transactions = Transaction.objects.filter(card_from=card).values(
         "card_from__card_id", "card_to__card_id", "amount", "time"

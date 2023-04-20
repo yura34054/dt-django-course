@@ -2,7 +2,7 @@ from django.core.exceptions import ObjectDoesNotExist
 from django.db import transaction
 from django.db.models import Q
 
-from app.internal.exceptions import ValidationError
+from app.internal.exceptions import AlreadyInFriendsError, NotInFriendsError, UserNotFoundError
 from app.internal.models import BankAccount, Transaction, User
 
 
@@ -63,11 +63,11 @@ def add_friend(telegram_id: (int, str), friend_username: str) -> None:
     try:
         friend = User.objects.filter(username=friend_username).get()
     except ObjectDoesNotExist:
-        raise ValidationError(f"User @{friend_username} not found")
+        raise UserNotFoundError(friend_username)
 
     with transaction.atomic():
         if user.filter(friends__username=friend_username).exists():
-            raise ValidationError(f"@{friend_username} already in friends")
+            raise AlreadyInFriendsError(friend_username)
 
         user = user.get()
         user.friends.add(friend)
@@ -80,11 +80,11 @@ def remove_friend(telegram_id: (int, str), friend_username: str) -> None:
     try:
         friend = User.objects.get(username=friend_username)
     except ObjectDoesNotExist:
-        raise ValidationError(f"User @{friend_username} not found")
+        raise UserNotFoundError(friend_username)
 
     with transaction.atomic():
         if not user.filter(friends__username=friend_username).exists():
-            raise ValidationError(f"@{friend_username} already not in friends")
+            raise NotInFriendsError(friend_username)
 
         user = user.get()
         user.friends.remove(friend)
@@ -95,7 +95,8 @@ def list_friends(telegram_id: (int, str)) -> list:
     """Return list of user's friends names"""
 
     friends = User.objects.filter(telegram_id=telegram_id).values("friends__username")
-    return list((f["friends__username"] for f in friends))
+    friends = list((f["friends__username"] for f in friends))
+    return [] if friends == [None] else friends
 
 
 def get_interactions(telegram_id: (int, str)):

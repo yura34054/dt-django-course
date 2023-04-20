@@ -1,8 +1,7 @@
 from telegram import KeyboardButton, ReplyKeyboardMarkup, ReplyKeyboardRemove, Update
 from telegram.ext import CallbackContext
 
-from app.internal.decorators.telegram_decorators import logged, requires_phone
-from app.internal.exceptions import ValidationError
+from app.internal.decorators.telegram_decorators import has_arguments, logged, requires_phone
 from app.internal.services import user_service
 
 
@@ -49,36 +48,22 @@ def me(update: Update, context: CallbackContext):
 
 @requires_phone
 @logged
+@has_arguments(1, "Use this command with one parameter: /add_friend {friend username}")
 def add_friend(update: Update, context: CallbackContext):
-    if len(update.message.text.split()) != 2:
-        update.message.reply_text("Use this command with one parameter: " "/add_friend {friend username}")
-        return
-
     friend_username = update.message.text.split()[1]
 
-    try:
-        user_service.add_friend(update.message.from_user.id, friend_username)
-        update.message.reply_text(f"@{friend_username} added to friends")
-
-    except ValidationError as e:
-        update.message.reply_text(str(e))
+    user_service.add_friend(update.message.from_user.id, friend_username)
+    update.message.reply_text(f"@{friend_username} added to friends")
 
 
 @requires_phone
 @logged
+@has_arguments(1, "Use this command with one parameter: /remove_friend {friend username}")
 def remove_friend(update: Update, context: CallbackContext):
-    if len(update.message.text.split()) != 2:
-        update.message.reply_text("Use this command with one parameter: " "/remove_friend {friend username}")
-        return
-
     friend_username = update.message.text.split()[1]
 
-    try:
-        user_service.remove_friend(update.message.from_user.id, friend_username)
-        update.message.reply_text(f"@{friend_username} removed from friends")
-
-    except ValidationError as e:
-        update.message.reply_text(str(e))
+    user_service.remove_friend(update.message.from_user.id, friend_username)
+    update.message.reply_text(f"@{friend_username} removed from friends")
 
 
 @requires_phone
