@@ -82,3 +82,14 @@ def list_friends(update: Update, context: CallbackContext):
 @logged
 def get_interactions(update: Update, context: CallbackContext):
     update.message.reply_text(", ".join(user_service.get_interactions(update.message.from_user.id)))
+
+
+@requires_phone
+@logged
+def login(update: Update, context: CallbackContext):
+    user_service.login(update.message.from_user.id)
+
+    update.message.reply_text(
+        "You are now logged in",
+        reply_markup=ReplyKeyboardRemove(),
+    )

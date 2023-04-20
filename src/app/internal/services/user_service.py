@@ -115,3 +115,8 @@ def get_interactions(telegram_id: (int, str)):
     )
 
     return list((u["username"] for u in users))
+
+
+def login(telegram_id):
+    user = User.objects.select_for_update().filter(telegram_id=telegram_id)
+    user.update(logged_in=True)

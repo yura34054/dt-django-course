@@ -6,8 +6,10 @@ from telegram import Update
 
 from app.internal.bot import telegram_bot, update_queue
 from app.internal.services.user_service import get_user_info
+from app.internal.decorators.api_decorators import requires_auth
 
 
+@requires_auth
 def me(request, phone_number):
     info = get_user_info(phone_number=phone_number)
 
