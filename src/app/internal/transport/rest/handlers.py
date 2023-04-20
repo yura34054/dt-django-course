@@ -5,8 +5,8 @@ from django.views.decorators.csrf import csrf_exempt
 from telegram import Update
 
 from app.internal.bot import telegram_bot, update_queue
-from app.internal.services.user_service import get_user_info
 from app.internal.decorators.api_decorators import requires_auth
+from app.internal.services.user_service import get_user_info
 
 
 @requires_auth

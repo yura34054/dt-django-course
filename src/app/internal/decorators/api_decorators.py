@@ -11,10 +11,11 @@ def requires_auth(func):
         auth = get_authorization_header(request).split()
 
         if auth and len(auth) == 2:
-            token = auth[1].decode('utf-8')
+            token = auth[1].decode("utf-8")
             decode_access_token(token)
 
             return func(request, *args, **kwargs)
 
-        raise AuthenticationFailed('unauthenticated')
+        raise AuthenticationFailed("unauthenticated")
+
     return wrapper

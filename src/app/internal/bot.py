@@ -42,7 +42,7 @@ def setup():
     dispatcher.add_handler(CommandHandler("get_bank_statement_card", bot.get_bank_statement_card))
     dispatcher.add_handler(CommandHandler("get_interactions", bot.get_interactions))
 
-    dispatcher.add_handler(CommandHandler('login', bot.login))
+    dispatcher.add_handler(CommandHandler("login", bot.login))
 
     # Start the thread
     thread = Thread(target=dispatcher.start, name="dispatcher")

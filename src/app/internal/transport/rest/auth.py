@@ -3,11 +3,7 @@ from rest_framework.exceptions import APIException, AuthenticationFailed
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from app.internal.authentication import (
-    create_access_token,
-    create_refresh_token,
-    decode_refresh_token,
-)
+from app.internal.authentication import create_access_token, create_refresh_token, decode_refresh_token
 from app.internal.models import User
 
 
