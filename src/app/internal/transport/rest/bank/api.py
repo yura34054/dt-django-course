@@ -10,7 +10,7 @@ from .schemas import BankAccountOut, BankCardSchema, BankStatementAccount, BankS
 
 
 def get_bank_accounts_router():
-    router = Router(tags=["bank_accounts"])
+    router = Router(tags=["bank-accounts"])
 
     router.add_api_operation(
         "",
