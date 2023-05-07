@@ -47,8 +47,8 @@ def me(update: Update, context: CallbackContext):
 
 
 @requires_phone
-@logged
 @has_arguments(1, "Use this command with one parameter: /add_friend {friend username}")
+@logged
 def add_friend(update: Update, context: CallbackContext):
     friend_username = update.message.text.split()[1]
 
@@ -57,8 +57,8 @@ def add_friend(update: Update, context: CallbackContext):
 
 
 @requires_phone
-@logged
 @has_arguments(1, "Use this command with one parameter: /remove_friend {friend username}")
+@logged
 def remove_friend(update: Update, context: CallbackContext):
     friend_username = update.message.text.split()[1]
 
@@ -85,9 +85,12 @@ def get_interactions(update: Update, context: CallbackContext):
 
 
 @requires_phone
+@has_arguments(1, "Use this command with one parameter: /login {password}")
 @logged
-def login(update: Update, context: CallbackContext):
-    user_service.login(update.message.from_user.id)
+def set_password(update: Update, context: CallbackContext):
+    password = update.message.text.split()[1]
+
+    user_service.set_password(update.message.from_user.id, password)
 
     update.message.reply_text(
         "You are now logged in",

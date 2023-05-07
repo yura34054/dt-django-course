@@ -1,4 +1,3 @@
-from django.core.exceptions import ObjectDoesNotExist
 from django.db import transaction
 from django.db.models import F, Q
 
@@ -32,9 +31,9 @@ def create_account(telegram_id: (str | int), name: str):
 def create_card(telegram_id: (str | int), bank_account_name: str) -> int:
     """create new BankCard object, return card's id on success"""
 
-    bank_account = BankAccount.objects.filter(Q(owner__telegram_id=telegram_id) & Q(name=bank_account_name))
+    bank_account = BankAccount.objects.filter(Q(owner__telegram_id=telegram_id) & Q(name=bank_account_name)).first()
 
-    if not bank_account.exists():
+    if bank_account is None:
         raise AccountNotFoundError(bank_account_name)
 
     card = BankCard.objects.create(
@@ -47,9 +46,9 @@ def create_card(telegram_id: (str | int), bank_account_name: str) -> int:
 def get_account_info(telegram_id: (str | int), name: str) -> dict:
     """return info about account if it exists, else empty dict"""
 
-    try:
-        account = BankAccount.objects.filter(Q(owner__telegram_id=telegram_id) & Q(name=name)).get()
-    except ObjectDoesNotExist:
+    account = BankAccount.objects.filter(Q(owner__telegram_id=telegram_id) & Q(name=name)).first()
+
+    if account is None:
         return {}
 
     info = {
@@ -64,10 +63,10 @@ def get_account_info(telegram_id: (str | int), name: str) -> dict:
 def get_accounts(telegram_id: (str | int)):
     """return info about all accounts associated with user"""
 
-    return {
-        account["name"]: account["money"]
-        for account in BankAccount.objects.values("name", "money").filter(owner__telegram_id=telegram_id)
-    }
+    return [
+        {"name": account.name, "money": account.money, "cards": (c.card_id for c in account.bankcard_set.all())}
+        for account in BankAccount.objects.filter(owner__telegram_id=telegram_id).prefetch_related("bankcard_set")
+    ]
 
 
 def __send_money(account_from: BankAccount, account_to: BankAccount, amount: float):
@@ -95,25 +94,23 @@ def send_money_account(
         raise NotInFriendsError(receiver_username)
 
     with transaction.atomic():
-        try:
-            account_from = (
-                BankAccount.objects.select_for_update()
-                .filter(Q(owner__telegram_id=owner_id) & Q(name=account_name))
-                .get()
-            )
-        except ObjectDoesNotExist:
+        account_from = (
+            BankAccount.objects.select_for_update()
+            .filter(Q(owner__telegram_id=owner_id) & Q(name=account_name))
+            .first()
+        )
+        if account_from is None:
             raise AccountNotFoundError(account_name)
 
         if account_from.money < amount:
             raise NotEnoughMoneyError
 
-        try:
-            account_to = (
-                BankAccount.objects.select_for_update()
-                .filter(Q(owner__username=receiver_username) & Q(name=receiver_account_name))
-                .get()
-            )
-        except ObjectDoesNotExist:
+        account_to = (
+            BankAccount.objects.select_for_update()
+            .filter(Q(owner__username=receiver_username) & Q(name=receiver_account_name))
+            .first()
+        )
+        if account_to is None:
             raise AccountNotFoundError(receiver_account_name)
 
         __send_money(account_from, account_to, amount)
@@ -131,11 +128,8 @@ def send_money_card(
         raise NegativeMoneyAmountError
 
     with transaction.atomic():
-        try:
-            card_from = (
-                BankCard.objects.select_for_update().filter(card_id=card_id).select_related("bank_account").get()
-            )
-        except ObjectDoesNotExist:
+        card_from = BankCard.objects.select_for_update().filter(card_id=card_id).select_related("bank_account").first()
+        if card_from is None:
             raise CardNotFoundError(card_id)
 
         if card_from.bank_account.owner.telegram_id != owner_id:
@@ -144,14 +138,13 @@ def send_money_card(
         if card_from.bank_account.money < amount:
             raise NotEnoughMoneyError
 
-        try:
-            card_to = (
-                BankCard.objects.select_for_update()
-                .filter(card_id=receiver_card_id)
-                .select_related("bank_account__owner")
-                .get()
-            )
-        except ObjectDoesNotExist:
+        card_to = (
+            BankCard.objects.select_for_update()
+            .filter(card_id=receiver_card_id)
+            .select_related("bank_account__owner")
+            .first()
+        )
+        if card_to is None:
             raise CardNotFoundError(receiver_card_id)
 
         if not User.objects.filter(telegram_id=owner_id, friends=card_to.bank_account.owner).exists():
@@ -173,9 +166,8 @@ def send_money_card(
 def get_bank_statement_account(telegram_id: (str | int), account_name: str) -> (dict, int):
     """Get all transactions for account"""
 
-    try:
-        account = BankAccount.objects.filter(owner__telegram_id=telegram_id, name=account_name).get()
-    except ObjectDoesNotExist:
+    account = BankAccount.objects.filter(owner__telegram_id=telegram_id, name=account_name).first()
+    if account is None:
         raise AccountNotFoundError(account_name)
 
     transactions = Transaction.objects.filter(account_from=account).values(
@@ -196,13 +188,12 @@ def get_bank_statement_account(telegram_id: (str | int), account_name: str) -> (
 def get_bank_statement_card(telegram_id: (str | int), card_id: (str | int)) -> (dict, int):
     """Get all transactions for card"""
 
-    try:
-        card = (
-            BankCard.objects.filter(bank_account__owner__telegram_id=telegram_id, card_id=card_id)
-            .select_related("bank_account")
-            .get()
-        )
-    except ObjectDoesNotExist:
+    card = (
+        BankCard.objects.filter(bank_account__owner__telegram_id=telegram_id, card_id=card_id)
+        .select_related("bank_account")
+        .first()
+    )
+    if card is None:
         raise CardNotFoundError(card_id)
 
     if card.bank_account.owner.telegram_id != telegram_id:

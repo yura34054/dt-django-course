@@ -32,6 +32,7 @@ def setup():
     dispatcher.add_handler(CommandHandler("list_friends", bot.list_friends))
 
     dispatcher.add_handler(CommandHandler("add_account", bot.add_account))
+    dispatcher.add_handler(CommandHandler("change_or_create_account", bot.change_or_create_account))
     dispatcher.add_handler(CommandHandler("add_card", bot.add_card))
     dispatcher.add_handler(CommandHandler("bank_account_info", bot.bank_account_info))
     dispatcher.add_handler(CommandHandler("bank_status", bot.bank_status))
@@ -42,7 +43,7 @@ def setup():
     dispatcher.add_handler(CommandHandler("get_bank_statement_card", bot.get_bank_statement_card))
     dispatcher.add_handler(CommandHandler("get_interactions", bot.get_interactions))
 
-    dispatcher.add_handler(CommandHandler("login", bot.login))
+    dispatcher.add_handler(CommandHandler("set_password", bot.set_password))
 
     # Start the thread
     thread = Thread(target=dispatcher.start, name="dispatcher")

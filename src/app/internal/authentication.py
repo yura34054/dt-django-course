@@ -1,7 +1,10 @@
 import datetime
 
 import jwt
-from rest_framework import exceptions
+from jwt.exceptions import PyJWTError
+from ninja.security import HttpBearer
+
+from app.internal.exceptions.validation_errors import UnauthorizedRequest
 
 
 def create_access_token(telegram_id):
@@ -21,8 +24,9 @@ def decode_access_token(token):
         payload = jwt.decode(token, "access_secret", algorithms="HS256")
 
         return payload["telegram_id"]
-    except:
-        raise exceptions.AuthenticationFailed("unauthenticated")
+
+    except PyJWTError:
+        raise UnauthorizedRequest
 
 
 def create_refresh_token(telegram_id):
@@ -42,5 +46,11 @@ def decode_refresh_token(token):
         payload = jwt.decode(token, "refresh_secret", algorithms="HS256")
 
         return payload["telegram_id"]
-    except:
-        raise exceptions.AuthenticationFailed("unauthenticated")
+
+    except PyJWTError:
+        raise UnauthorizedRequest
+
+
+class AuthBearer(HttpBearer):
+    def authenticate(self, request, token):
+        return decode_access_token(token)

@@ -54,3 +54,9 @@ class CardPermissionError(ValidationError):
     def __init__(self, card_id):
         self.message = f'You don\'t own card "{card_id}"'
         super().__init__(self.message)
+
+
+class UnauthorizedRequest(ValidationError):
+    def __init__(self):
+        self.message = "Unauthorized"
+        super().__init__(self.message)
