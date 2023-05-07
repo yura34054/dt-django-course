@@ -59,7 +59,6 @@ INSTALLED_APPS = [
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
-    "rest_framework",
     "corsheaders",
     "app",
 ]
@@ -165,7 +164,7 @@ TELEGRAM_BOT = {
     "drop_pending_updates": env("DROP_PENDING_UPDATES"),
 }
 
-CSRF_TRUSTED_ORIGINS = [env("DOMAIN"), "https://restninja.io"]
+CSRF_TRUSTED_ORIGINS = [env("DOMAIN")]
 
 CORS_ORIGIN_ALLOW_ALL = True
 CORS_ALLOW_CREDENTIALS = True

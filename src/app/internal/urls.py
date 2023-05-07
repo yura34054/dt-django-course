@@ -1,12 +1,9 @@
 from django.urls import path
 
-from app.internal.transport.rest import handlers as rest
-from app.internal.transport.rest.auth import LoginAPIView, LogoutAPIView, RefreshAPIView
+from app.internal.transport.rest.api import get_api
+from app.internal.transport.telegram_webhook.webhook import telegram_webhook
 
 urlpatterns = [
-    path("me/<str:phone_number>", rest.me, name="me"),
-    path("telegram-webhook/", rest.telegram_webhook),
-    path("login", LoginAPIView.as_view()),
-    path("refresh", RefreshAPIView.as_view()),
-    path("logout", LogoutAPIView.as_view()),
+    path("telegram-webhook/", telegram_webhook),
+    path("", get_api().urls),
 ]

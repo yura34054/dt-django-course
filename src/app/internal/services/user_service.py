@@ -1,27 +1,32 @@
-from django.core.exceptions import ObjectDoesNotExist
+from django.contrib.auth.hashers import make_password
 from django.db import transaction
 from django.db.models import Q
 
 from app.internal.exceptions import AlreadyInFriendsError, NotInFriendsError, UserNotFoundError
-from app.internal.models import BankAccount, Transaction, User
+from app.internal.models import User
 
 
 def create_user(telegram_id: (int, str), first_name: str, last_name="", username="") -> (User, bool):
     """Create new user if id isn't taken, return User object and whether it was created"""
 
-    try:
-        return User.objects.get(telegram_id=telegram_id), False
+    user = User.objects.filter(telegram_id=telegram_id).first()
+    if user is not None:
+        return user, False
 
-    except ObjectDoesNotExist:
-        return (
-            User.objects.create(
-                telegram_id=telegram_id,
-                first_name=first_name,
-                last_name=last_name,
-                username=username,
-            ),
-            True,
-        )
+    return (
+        User.objects.create(
+            telegram_id=telegram_id,
+            first_name=first_name,
+            last_name=last_name,
+            username=username,
+        ),
+        True,
+    )
+
+
+def update_user(telegram_id: (int, str), first_name: str, last_name="", username="", phone_number=""):
+    user = User.objects.select_for_update().filter(telegram_id=telegram_id)
+    user.update(first_name=first_name, last_name=last_name, username=username, phone_number=phone_number)
 
 
 def is_phone_set(telegram_id: (int, str)) -> bool:
@@ -41,9 +46,9 @@ def update_user_phone(telegram_id: (int, str), phone_number: (int, str)) -> None
 def get_user_info(telegram_id: (int, str) = None, phone_number: (int, str) = None) -> dict:
     """Return info about user"""
 
-    try:
-        user = User.objects.filter(Q(telegram_id=telegram_id) | Q(phone_number=phone_number)).get()
-    except ObjectDoesNotExist:
+    user = User.objects.filter(Q(telegram_id=telegram_id) | Q(phone_number=phone_number)).first()
+
+    if user is None:
         return {}
 
     user_info = {
@@ -60,9 +65,8 @@ def add_friend(telegram_id: (int, str), friend_username: str) -> None:
     """Add new friend to user's friends"""
 
     user = User.objects.select_for_update().filter(telegram_id=telegram_id).prefetch_related("friends")
-    try:
-        friend = User.objects.filter(username=friend_username).get()
-    except ObjectDoesNotExist:
+    friend = User.objects.filter(username=friend_username).first()
+    if friend is None:
         raise UserNotFoundError(friend_username)
 
     with transaction.atomic():
@@ -77,9 +81,9 @@ def remove_friend(telegram_id: (int, str), friend_username: str) -> None:
     """Remove existing friend from user's friends"""
 
     user = User.objects.select_for_update().filter(telegram_id=telegram_id)
-    try:
-        friend = User.objects.get(username=friend_username)
-    except ObjectDoesNotExist:
+
+    friend = User.objects.filter(username=friend_username).first()
+    if friend is None:
         raise UserNotFoundError(friend_username)
 
     with transaction.atomic():
@@ -117,6 +121,6 @@ def get_interactions(telegram_id: (int, str)):
     return list((u["username"] for u in users))
 
 
-def login(telegram_id):
+def set_password(telegram_id: int, password: str):
     user = User.objects.select_for_update().filter(telegram_id=telegram_id)
-    user.update(logged_in=True)
+    user.update(password=make_password(password))
