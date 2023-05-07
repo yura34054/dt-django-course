@@ -5,57 +5,8 @@ Hi! This is my new telegram bot. It was made as a homework for django course and
 
 Don't forget to check out the [course](https://www.youtube.com/playlist?list=PLQ09TvuOLytTca-0iXr09Ncohrs7qz5ju)!
 
-## Quick start
-Install the package
-``` bash 
-git clone https://gitlab.com/yura34054/DT-django-homework.git
-cd DT-django-homework
-```
-
-Create virtual environment (optional)
-``` bash
-python3 -m venv venv
-source venv/bin/activate
-```
-
-Install all requirements
-``` bash
-make piplock
-```
-
-Run migrations to setup SQLite database
-``` bash
-make migrate
-```
-
-Create .env file, don't forget to change the data
-``` bash
-cp .env.example .env
-```
-
-Finally, you can run the server and telegram bot
-``` bash
-make dev
-make bot
-```
-
-## Running with docker-compose
-Create app image
-``` bash
-make docker_build
-```
-And run all services at once
-``` bash
-make docker_up
-```
-Then, you can deactivate with 
-``` bash
-make docker_down
-```
-
-
 ## Possible problems
-* For now this bot works only in polling mode.
+* For now this bot works only in webhook mode.
 * Some code assumes that telegram blocks all messaging before the first /start command, 
 this can lead to problems if you are removing data from database.
 

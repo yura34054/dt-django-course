@@ -6,7 +6,7 @@ class User(models.Model):
     telegram_id = models.IntegerField(primary_key=True)
     first_name = models.CharField(max_length=255)
     last_name = models.CharField(max_length=255, blank=True)
-    username = models.CharField(max_length=255, blank=True)
+    username = models.CharField(blank=True)
     phone_number = models.CharField(
         max_length=30,
         blank=True,
@@ -17,6 +17,7 @@ class User(models.Model):
         ],
     )
     friends = models.ManyToManyField("self", symmetrical=False, blank=True)
+    password = models.CharField(max_length=255, blank=True)
 
     def __str__(self):
         return f"{self.first_name} {self.last_name} ({self.telegram_id})"

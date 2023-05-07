@@ -8,3 +8,5 @@ __pycache__
 .idea
 *.sqlite3
 static
+.pytest_cache
+yandex-tank
