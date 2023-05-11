@@ -29,6 +29,8 @@ env = environ.Env(
     DB_PASSWORD=(str, ""),
     DB_HOST=(str, "localhost"),
     DB_PORT=(int, 5432),
+    AWS_S3_ACCESS_KEY_ID=(str, ""),
+    AWS_S3_SECRET_ACCESS_KEY=(str, ""),
 )
 
 
@@ -60,6 +62,7 @@ INSTALLED_APPS = [
     "django.contrib.messages",
     "django.contrib.staticfiles",
     "corsheaders",
+    "storages",
     "app",
 ]
 
@@ -168,3 +171,13 @@ CSRF_TRUSTED_ORIGINS = [env("DOMAIN")]
 
 CORS_ORIGIN_ALLOW_ALL = True
 CORS_ALLOW_CREDENTIALS = True
+
+DEFAULT_FILE_STORAGE = "storages.backends.s3boto3.S3Boto3Storage"
+
+AWS_ACCESS_KEY_ID = env("AWS_S3_ACCESS_KEY_ID")
+AWS_SECRET_ACCESS_KEY = env("AWS_S3_SECRET_ACCESS_KEY")
+AWS_STORAGE_BUCKET_NAME = "django-telegram-bot-storage"
+
+AWS_S3_REGION_NAME = "us-east-1"
+AWS_S3_ENDPOINT_URL = "https://storage.yandexcloud.net"
+AWS_S3_FILE_OVERWRITE = False

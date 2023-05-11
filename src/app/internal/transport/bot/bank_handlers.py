@@ -81,6 +81,7 @@ def send_money_account(update: Update, context: CallbackContext):
     amount = bank_service.send_money_account(
         update.message.from_user.id, receiver_username, account_name, receiver_account_name, amount
     )
+
     update.message.reply_text(f"Successfully sent {amount} to @{receiver_username}")
 
 
@@ -94,6 +95,31 @@ def send_money_card(update: Update, context: CallbackContext):
     update.message.reply_text(f'Successfully sent {amount} to card "{receiver_card_id}"')
 
 
+@logged
+@requires_phone
+@has_arguments(
+    4,
+    "Use this command with four parameters: "
+    "/send_postcard {receiver username} {your account name} {receiver account name} {amount}",
+)
+def send_postcard(update: Update, context: CallbackContext):
+    receiver_username, account_name, receiver_account_name, amount = update.message.caption.split()[1:]
+
+    if not update.message.photo:
+        update.message.reply_text("You have to use this command with a picture attached")
+        return
+
+    print(update.message.photo)
+
+    postcard = update.message.photo[-1]
+
+    amount = bank_service.send_money_account(
+        update.message.from_user.id, receiver_username, account_name, receiver_account_name, amount, postcard
+    )
+
+    update.message.reply_text(f"Successfully sent {amount} to @{receiver_username}")
+
+
 @requires_phone
 @has_arguments(1, "Use this command with one parameter: /get_bank_statement_account {account_name}")
 @logged
@@ -103,9 +129,14 @@ def get_bank_statement_account(update: Update, context: CallbackContext):
     bank_statement, money = bank_service.get_bank_statement_account(update.message.from_user.id, account_name)
     if not bank_statement:
         update.message.reply_text(f"No transactions for account {account_name} found" + f"\nYour balance: {money}")
+        return
 
     update.message.reply_text(
-        "\n".join(f"{st['time']}: {st['account_from']} -> {st['account_to']} | {st['amount']}" for st in bank_statement)
+        "\n".join(
+            f"{st['time']}: {st['account_from']} -> {st['account_to']} | {st['amount']}\n "
+            f"postcard: {st['postcard_link']} \n"
+            for st in bank_statement
+        )
         + f"\nYour balance: {money}"
     )
 
@@ -119,8 +150,30 @@ def get_bank_statement_card(update: Update, context: CallbackContext):
     bank_statement, money = bank_service.get_bank_statement_card(update.message.from_user.id, card_id)
     if not bank_statement:
         update.message.reply_text(f'No transactions for card "{card_id}" found' + f"\nYour balance: {money}")
+        return
 
     update.message.reply_text(
         "\n".join(f"{st['time']}: {st['account_from']} -> {st['account_to']} | {st['amount']}" for st in bank_statement)
+        + f"\nYour balance: {money}"
+    )
+
+
+@requires_phone
+@has_arguments(1, "Use this command with one parameter: /get_unred_postcards {account_name}")
+@logged
+def get_unred_postcards(update: Update, context: CallbackContext):
+    account_name = update.message.text.split()[1]
+
+    bank_statement, money = bank_service.get_unred_postcards(update.message.from_user.id, account_name)
+    if not bank_statement:
+        update.message.reply_text(f"No postcards for account {account_name} found" + f"\nYour balance: {money}")
+        return
+
+    update.message.reply_text(
+        "\n".join(
+            f"{st['time']}: {st['account_from']} -> {st['account_to']} | {st['amount']}\n "
+            f"postcard: {st['postcard_link']} \n"
+            for st in bank_statement
+        )
         + f"\nYour balance: {money}"
     )

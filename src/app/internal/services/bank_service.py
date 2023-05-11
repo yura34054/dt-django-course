@@ -1,3 +1,6 @@
+import io
+
+from django.core.files.images import ImageFile
 from django.db import transaction
 from django.db.models import F, Q
 
@@ -11,6 +14,7 @@ from app.internal.exceptions import (
     NotInFriendsError,
 )
 from app.internal.models import BankAccount, BankCard, Transaction, User
+from app.internal.storage.yandex_s3 import get_presigned_link
 
 
 def create_account(telegram_id: (str | int), name: str):
@@ -47,7 +51,6 @@ def get_account_info(telegram_id: (str | int), name: str) -> dict:
     """return info about account if it exists, else empty dict"""
 
     account = BankAccount.objects.filter(Q(owner__telegram_id=telegram_id) & Q(name=name)).first()
-
     if account is None:
         return {}
 
@@ -69,12 +72,24 @@ def get_accounts(telegram_id: (str | int)):
     ]
 
 
-def __send_money(account_from: BankAccount, account_to: BankAccount, amount: float):
+def __send_money(amount, account_from, account_to, card_from=None, card_to=None, postcard=None):
     account_from.money = F("money") - amount
     account_to.money = F("money") + amount
 
     account_from.save(update_fields=("money",))
     account_to.save(update_fields=("money",))
+
+    Transaction.objects.create(
+        amount=amount,
+        account_from=account_from,
+        card_from=card_from,
+        account_to=account_to,
+        card_to=card_to,
+        has_postcard=postcard is not None,
+        postcard=ImageFile(
+            io.BytesIO(bytes(postcard.get_file().download_as_bytearray())), name=postcard.file_unique_id + ".png"
+        ),
+    )
 
 
 def send_money_account(
@@ -83,6 +98,7 @@ def send_money_account(
     account_name: str,
     receiver_account_name: str,
     amount: (str | int | float),
+    postcard=None,
 ) -> float:
     """Transfer money from one account to the other if all conditions met, returns amount on success"""
 
@@ -113,13 +129,13 @@ def send_money_account(
         if account_to is None:
             raise AccountNotFoundError(receiver_account_name)
 
-        __send_money(account_from, account_to, amount)
-        Transaction.objects.create(amount=amount, account_from=account_from, account_to=account_to)
+        __send_money(amount=amount, account_from=account_from, account_to=account_to, postcard=postcard)
+
         return amount
 
 
 def send_money_card(
-    owner_id: int, card_id: (str | int), receiver_card_id: (str | int), amount: (str | int | float)
+    owner_id: int, card_id: (str | int), receiver_card_id: (str | int), amount: (str | int | float), postcard=None
 ) -> float:
     """Transfer money from one account to the other if all conditions met, return amount on success"""
 
@@ -150,14 +166,13 @@ def send_money_card(
         if not User.objects.filter(telegram_id=owner_id, friends=card_to.bank_account.owner).exists():
             raise NotInFriendsError(card_to.bank_account.owner.username)
 
-        __send_money(card_from.bank_account, card_to.bank_account, amount)
-
-        Transaction.objects.create(
+        __send_money(
             amount=amount,
             card_from=card_from,
             account_from=card_from.bank_account,
             card_to=card_to,
             account_to=card_to.bank_account,
+            postcard=postcard,
         )
 
     return amount
@@ -170,19 +185,12 @@ def get_bank_statement_account(telegram_id: (str | int), account_name: str) -> (
     if account is None:
         raise AccountNotFoundError(account_name)
 
-    transactions = Transaction.objects.filter(account_from=account).values(
-        "account_from__name", "account_to__name", "amount", "time"
-    )
+    transactions = Transaction.objects.filter(Q(account_from=account) | Q(account_to=account)).distinct()
 
-    return [
-        {
-            "time": t["time"].strftime("%d/%m/%Y"),
-            "account_from": t["account_from__name"],
-            "account_to": t["account_to__name"],
-            "amount": round(float(t["amount"]), 2),
-        }
-        for t in transactions
-    ], round(float(account.money), 2)
+    bank_statement = __compile_account_transactions(transactions)
+    transactions.update(read=True)
+
+    return bank_statement, round(float(account.money), 2)
 
 
 def get_bank_statement_card(telegram_id: (str | int), card_id: (str | int)) -> (dict, int):
@@ -199,8 +207,10 @@ def get_bank_statement_card(telegram_id: (str | int), card_id: (str | int)) -> (
     if card.bank_account.owner.telegram_id != telegram_id:
         raise CardPermissionError(card_id)
 
-    transactions = Transaction.objects.filter(card_from=card).values(
-        "card_from__card_id", "card_to__card_id", "amount", "time"
+    transactions = (
+        Transaction.objects.filter(Q(card_from=card) | Q(card_to=card))
+        .distinct()
+        .values("card_from__card_id", "card_to__card_id", "amount", "time")
     )
 
     return [
@@ -212,3 +222,29 @@ def get_bank_statement_card(telegram_id: (str | int), card_id: (str | int)) -> (
         }
         for t in transactions
     ], round(float(card.bank_account.money), 2)
+
+
+def get_unred_postcards(telegram_id: (str | int), account_name: str):
+    account = BankAccount.objects.filter(owner__telegram_id=telegram_id, name=account_name).first()
+    if account is None:
+        raise AccountNotFoundError(account_name)
+
+    transactions = Transaction.objects.filter(account_to=account, read=False, has_postcard=True)
+
+    bank_statement = __compile_account_transactions(transactions)
+    transactions.update(read=True)
+
+    return bank_statement, round(float(account.money), 2)
+
+
+def __compile_account_transactions(transactions):
+    return [
+        {
+            "time": t.time.strftime("%d/%m/%Y"),
+            "account_from": t.account_from.name,
+            "account_to": t.account_to.name,
+            "amount": round(float(t.amount), 2),
+            "postcard_link": get_presigned_link(t.postcard.name),
+        }
+        for t in transactions.select_related("account_from", "account_to")
+    ]
