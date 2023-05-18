@@ -45,9 +45,6 @@ def setup():
 
     dispatcher.add_handler(CommandHandler("set_password", bot.set_password))
 
-    dispatcher.add_handler(MessageHandler(Filters.caption_regex(r"^\/send_postcard.*"), bot.send_postcard))
-    dispatcher.add_handler(CommandHandler("get_unred_postcards", bot.get_unred_postcards))
-
     # Start the thread
     thread = Thread(target=dispatcher.start, name="dispatcher")
     thread.daemon = True  # I DO NOT UNDERSTAND HOW THIS LINE WORKS
