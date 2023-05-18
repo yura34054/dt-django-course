@@ -1,9 +1,12 @@
 from django.contrib.auth.hashers import make_password
 from django.db import transaction
 from django.db.models import Q
+from prometheus_client import Counter
 
 from app.internal.exceptions import AlreadyInFriendsError, NotInFriendsError, UserNotFoundError
 from app.internal.models import User
+
+friends_counter = Counter("friends_counter", "number of friends made")
 
 
 def create_user(telegram_id: (int, str), first_name: str, last_name="", username="") -> (User, bool):
@@ -75,6 +78,8 @@ def add_friend(telegram_id: (int, str), friend_username: str) -> None:
 
         user = user.get()
         user.friends.add(friend)
+
+    friends_counter.inc()
 
 
 def remove_friend(telegram_id: (int, str), friend_username: str) -> None:

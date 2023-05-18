@@ -3,7 +3,7 @@ import logging
 from app.internal.exceptions import ValidationError
 from app.internal.services import user_service
 
-logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger("DT_django_logger")
 
 
 def requires_phone(func):
@@ -20,16 +20,17 @@ def requires_phone(func):
 def logged(func):
     def wrapper(update, context):
         try:
-            logging.info("user: {id}: {function}".format(id=update.message.from_user.id, function=func.__name__))
+            logger.info(f"user: {update.message.from_user.id}: {func.__name__}")
 
             func(update, context)
 
         except ValidationError as e:
             update.message.reply_text(str(e))
+            logger.info(f"user: {update.message.from_user.id}: {func.__name__} - {type(e).__name__}")
 
         except Exception as e:
             update.message.reply_text("Something went wrong, please try again or contact support")
-            logging.exception(e)
+            logger.exception(e)
 
     return wrapper
 

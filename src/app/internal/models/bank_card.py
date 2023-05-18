@@ -1,9 +1,10 @@
 from django.db import models
+from django_prometheus.models import ExportModelOperationsMixin
 
 from app.internal.models.bank_account import BankAccount
 
 
-class BankCard(models.Model):
+class BankCard(ExportModelOperationsMixin("bank_card"), models.Model):
     bank_account = models.ForeignKey(BankAccount, on_delete=models.CASCADE)
     card_id = models.AutoField(primary_key=True)
 

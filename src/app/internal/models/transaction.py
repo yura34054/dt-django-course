@@ -1,10 +1,11 @@
 from django.db import models
+from django_prometheus.models import ExportModelOperationsMixin
 
 from app.internal.models.bank_account import BankAccount
 from app.internal.models.bank_card import BankCard
 
 
-class Transaction(models.Model):
+class Transaction(ExportModelOperationsMixin("transaction"), models.Model):
     time = models.DateTimeField(auto_now_add=True)
     amount = models.DecimalField(max_digits=11, decimal_places=2)
 
