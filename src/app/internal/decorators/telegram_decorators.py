@@ -38,12 +38,14 @@ def logged(func):
 def has_arguments(count: int, message: str):
     def decorator(func):
         def wrapper(update, context):
-            if len(update.message.text.split()) != count + 1:
-                update.message.reply_text(message)
-                return
+            if (update.message.text is not None and len(update.message.text.split()) == count + 1) or (
+                update.message.caption is not None and len(update.message.caption.split()) == count + 1
+            ):
+                func(update, context)
 
             else:
-                func(update, context)
+                update.message.reply_text(message)
+                return
 
         return wrapper
 

@@ -110,7 +110,7 @@ WSGI_APPLICATION = "config.wsgi.application"
 
 DATABASES = {
     "default": {
-        "ENGINE": "django.db.backends.postgresql",
+        "ENGINE": "django_prometheus.db.backends.postgresql",
         "NAME": env("DB_NAME"),
         "USER": env("DB_USER"),
         "PASSWORD": env("DB_PASSWORD"),
@@ -209,9 +209,8 @@ LOGGING = {
         "telegram": {
             "level": "INFO",
             "class": "app.internal.logging.telegram_logger.TelegramLogHandler",
-            # this shit does not work \w env, I tried
-            "logging_telegram_token": "6211751661:AAF-TTiS6sz_D8Y645h0SImJc3y6kORtsTA",
-            "logging_chat_id": 2100193068,
+            "logging_telegram_token": env("LOGGING_TELEGRAM_TOKEN"),
+            "logging_chat_id": env("LOGGING_CHAT_ID"),
         },
     },
     "loggers": {
