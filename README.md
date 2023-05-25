@@ -20,7 +20,7 @@ cp .env.example .env
 
 Because server will be local you need to use ngrok or other tool to route the connection, add your DOMAIN to .env file 
 ``` bash
-ngrok http 8000
+ngrok http 1337
 ```
 
 Finally, you can build the image and run in container with one command
