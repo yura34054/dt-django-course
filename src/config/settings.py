@@ -29,12 +29,18 @@ env = environ.Env(
     DB_PASSWORD=(str, ""),
     DB_HOST=(str, "localhost"),
     DB_PORT=(int, 5432),
+    AWS_S3_ACCESS_KEY_ID=(str, ""),
+    AWS_S3_SECRET_ACCESS_KEY=(str, ""),
+    AWS_STORAGE_BUCKET_NAME=(str, ""),
+    AWS_S3_REGION_NAME=(str, ""),
+    AWS_S3_ENDPOINT_URL=(str, ""),
+    LOGGING_TELEGRAM_TOKEN=(str, ""),
+    LOGGING_CHAT_ID=(int, ""),
 )
 
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
-
 
 environ.Env.read_env(os.path.join(BASE_DIR.parent, ".env"))
 
@@ -60,10 +66,13 @@ INSTALLED_APPS = [
     "django.contrib.messages",
     "django.contrib.staticfiles",
     "corsheaders",
+    "storages",
+    "django_prometheus",
     "app",
 ]
 
 MIDDLEWARE = [
+    "django_prometheus.middleware.PrometheusBeforeMiddleware",
     "django.middleware.security.SecurityMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
@@ -72,6 +81,7 @@ MIDDLEWARE = [
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
     "corsheaders.middleware.CorsMiddleware",
+    "django_prometheus.middleware.PrometheusAfterMiddleware",
 ]
 
 ROOT_URLCONF = "config.urls"
@@ -100,7 +110,7 @@ WSGI_APPLICATION = "config.wsgi.application"
 
 DATABASES = {
     "default": {
-        "ENGINE": "django.db.backends.postgresql_psycopg2",
+        "ENGINE": "django_prometheus.db.backends.postgresql",
         "NAME": env("DB_NAME"),
         "USER": env("DB_USER"),
         "PASSWORD": env("DB_PASSWORD"),
@@ -164,7 +174,49 @@ TELEGRAM_BOT = {
     "drop_pending_updates": env("DROP_PENDING_UPDATES"),
 }
 
+
+# some stuff to get less csrf errors I hope
+
 CSRF_TRUSTED_ORIGINS = [env("DOMAIN")]
 
 CORS_ORIGIN_ALLOW_ALL = True
 CORS_ALLOW_CREDENTIALS = True
+
+
+# s3 storage
+
+DEFAULT_FILE_STORAGE = "storages.backends.s3boto3.S3Boto3Storage"
+
+AWS_ACCESS_KEY_ID = env("AWS_S3_ACCESS_KEY_ID")
+AWS_SECRET_ACCESS_KEY = env("AWS_S3_SECRET_ACCESS_KEY")
+AWS_STORAGE_BUCKET_NAME = env("AWS_STORAGE_BUCKET_NAME")
+
+AWS_S3_REGION_NAME = env("AWS_S3_REGION_NAME")
+AWS_S3_ENDPOINT_URL = env("AWS_S3_ENDPOINT_URL")
+AWS_S3_FILE_OVERWRITE = False
+
+
+# logging
+
+LOGGING = {
+    "version": 1,
+    "disable_existing_loggers": False,
+    "handlers": {
+        "console": {
+            "level": "INFO",
+            "class": "logging.StreamHandler",
+        },
+        "telegram": {
+            "level": "INFO",
+            "class": "app.internal.logging.telegram_logger.TelegramLogHandler",
+            "logging_telegram_token": env("LOGGING_TELEGRAM_TOKEN"),
+            "logging_chat_id": env("LOGGING_CHAT_ID"),
+        },
+    },
+    "loggers": {
+        "DT_django_logger": {
+            "handlers": ["console", "telegram"],
+            "level": "INFO",
+        },
+    },
+}

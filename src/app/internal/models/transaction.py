@@ -1,10 +1,11 @@
 from django.db import models
+from django_prometheus.models import ExportModelOperationsMixin
 
 from app.internal.models.bank_account import BankAccount
 from app.internal.models.bank_card import BankCard
 
 
-class Transaction(models.Model):
+class Transaction(ExportModelOperationsMixin("transaction"), models.Model):
     time = models.DateTimeField(auto_now_add=True)
     amount = models.DecimalField(max_digits=11, decimal_places=2)
 
@@ -13,6 +14,10 @@ class Transaction(models.Model):
 
     card_to = models.ForeignKey(BankCard, blank=True, null=True, on_delete=models.SET_NULL, related_name="card_to")
     account_to = models.ForeignKey(BankAccount, on_delete=models.CASCADE, related_name="account_to")
+
+    read = models.BooleanField(default=False)
+    has_postcard = models.BooleanField(default=False)
+    postcard = models.ImageField(blank=True)
 
     def __str__(self):
         return f"{self.time}: {self.account_from.name} {self.amount} to {self.account_to.name}"

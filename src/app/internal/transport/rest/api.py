@@ -28,6 +28,6 @@ def get_api():
 
     @api.exception_handler(ValidationError)
     def on_bad_request(request, exc):
-        return api.create_response(request, {"detail": "Invalid request"}, status=400)
+        return api.create_response(request, {"detail": "Invalid request", "error": type(exc).__name__}, status=400)
 
     return api
