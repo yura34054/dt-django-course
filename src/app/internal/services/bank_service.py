@@ -47,7 +47,7 @@ def create_card(telegram_id: (str | int), bank_account_name: str) -> int:
         raise AccountNotFoundError(bank_account_name)
 
     card = BankCard.objects.create(
-        bank_account=bank_account.get(),
+        bank_account=bank_account,
     )
 
     return card.card_id
