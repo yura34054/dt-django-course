@@ -3,7 +3,7 @@ services:
   web:
     build: ./src
     image: ${IMAGE_APP}
-    command: gunicorn config.wsgi:application --bind 0.0.0.0:8000
+    command: bash -c "python manage.py collectstatic --no-input && gunicorn config.wsgi:application --bind 0.0.0.0:8000"
     restart: always
     env_file:
       - .env

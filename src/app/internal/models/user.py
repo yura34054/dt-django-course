@@ -1,8 +1,9 @@
 from django.core.validators import RegexValidator
 from django.db import models
+from django_prometheus.models import ExportModelOperationsMixin
 
 
-class User(models.Model):
+class User(ExportModelOperationsMixin("user"), models.Model):
     telegram_id = models.IntegerField(primary_key=True)
     first_name = models.CharField(max_length=255)
     last_name = models.CharField(max_length=255, blank=True)
